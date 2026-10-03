@@ -1,13 +1,17 @@
 import { QUESTIONS, scoreQuiz } from "./quiz.js";
 import { analyze } from "./color.js";
 import { combine } from "./classify.js";
-import { TYPES, byId, nameOf } from "./palettes.js";
+import { TYPES, byId, nameOf, LEGACY } from "./palettes.js";
+import { expertScan } from "./expert.js";
 import { findFace } from "./face.js";
 import * as store from "./storage.js";
 
 const $app = document.getElementById("app"), $tabs = document.getElementById("tabs");
 const saved = store.load();
-const S = { screen: saved.result ? "home" : "welcome", tab: "profile", qi: 0, answers: saved.answers || {}, photo: null, drape: null, result: saved.result || null, stream: null };
+for (const r of [saved.result, saved.result && { type: saved.result.runnerUp }, saved.expert]) if (r && LEGACY[r.type]) r.type = LEGACY[r.type];
+if (saved.result && LEGACY[saved.result.runnerUp]) saved.result.runnerUp = LEGACY[saved.result.runnerUp];
+if (saved.expert && LEGACY[saved.expert.runnerUp]) saved.expert.runnerUp = LEGACY[saved.expert.runnerUp];
+const S = { screen: saved.result ? "home" : "welcome", tab: "home", view: "picks", expert: saved.expert || null, qi: 0, answers: saved.answers || {}, photo: null, drape: null, result: saved.result || null, stream: null };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const sw = (list, cls = "sw") => list.map(([n, h]) => `<div class="${cls}"><i style="--c:${h}"></i><span>${esc(n)}</span></div>`).join("");
 function go(screen, extra = {}) { Object.assign(S, extra); if (screen !== "camera") stopCam(); S.screen = screen; render(); window.scrollTo(0, 0); }
@@ -49,21 +53,26 @@ analyze: () => `<section class="screen">
   <div class="photo" id="photoWrap"><canvas id="cv"></canvas><div class="drape" id="drape" hidden></div></div>
   <div id="aCtl" class="row"></div><div id="reading"></div></section>`,
 
-result: () => { const r = S.result, t = byId[r.type], ru = byId[r.runnerUp];
+result: () => { const r = S.result, x = S.expert;
   return `<section class="screen">
-  <p class="step center">Your personal color</p>${card(t)}
-  <div class="conf ${r.label.toLowerCase()}"><b>${r.label} confidence</b><span>${r.conf}%</span></div>
-  <ul class="why">${r.why.map(w => `<li>${esc(w)}</li>`).join("")}</ul>
-  <p class="muted">Close runner-up: <b>${nameOf(ru)}</b> (${ru.ko}).${r.label === "Low" ? " Try the photo step again in daylight with white paper for a better read." : ""}</p>
-  <button class="btn" data-act="toHome">See my palettes →</button>
+  <p class="step center">Your personal color</p>
+  ${agreeNote(r, x)}
+  <div class="duo">
+    ${panel("Your picks", "From your quiz + drape choices", r.type, r.label, r.conf, r.why.filter(w => !/^Photo/.test(w)), r.runnerUp)}
+    ${x ? panel("What the scan says looks best", "Expert scan of your photo: skin, hair & eye color science", x.type, x.label, x.conf, x.reasons, x.runnerUp)
+        : `<div class="panel empty"><p class="pk">What the scan says looks best</p><p class="muted">No photo yet. Take the daylight photo step to get an independent Expert scan.</p><button class="btn ghost sm" data-act="toCamera">📸 Add a photo scan</button></div>`}
+  </div>
+  <button class="btn" data-act="toProfile">See my palettes →</button>
   <button class="link" data-act="retake">Retake</button></section>`; },
-
-home: () => { const t = S.result ? byId[S.result.type] : null;
-  if (!t) return V.welcome();
+home: () => {
+  if (S.tab === "home") return homeTab();
+  const t = S.result ? byId[(S.view === "scan" && S.expert ? S.expert : S.result).type] : null;
+  if (!t) return soon("Profile", "Finish an analysis to see your season, palettes and makeup colors here.") + `<div class="row"><button class="btn" data-act="start">Start analysis</button></div>`;
   if (S.tab === "style") return soon("Style", "Flattering cuts and outfit colors for your type, with optional body questions. Body-positive, always.");
   if (S.tab === "skin") return soon("Skin", "A Korean skincare quiz with researched K-beauty routines. Not medical advice.");
   const m = t.makeup;
-  return `<section class="screen">${card(t)}
+  const sw2 = S.expert && S.expert.type !== S.result.type ? `<div class="seg"><button class="${S.view !== "scan" ? "on" : ""}" data-act="view" data-v="picks">Your picks</button><button class="${S.view === "scan" ? "on" : ""}" data-act="view" data-v="scan">Expert scan</button></div>` : "";
+  return `<section class="screen">${sw2}${card(t)}
   <p class="traits">${esc(t.traits)}</p><p>${esc(t.desc)}</p>
   <h3>Best colors</h3><div class="grid">${sw(t.best)}</div>
   <h3>Colors to avoid near your face</h3><div class="grid">${sw(t.worst, "sw x")}</div>
@@ -72,9 +81,32 @@ home: () => { const t = S.result ? byId[S.result.type] : null;
   <h3>Hair colors</h3><div class="grid">${sw(t.hair)}</div>
   <h3>Jewelry metals</h3><p class="metals">${t.metals.map(x => `<span>${esc(x)}</span>`).join("")}</p>
   <div class="tipbox">💡 ${esc(t.tip)}</div>
-  <p class="tiny">Result from ${new Date(S.result.date).toLocaleDateString()} · ${S.result.label} confidence (${S.result.conf}%)</p>
+  ${(() => { const src = S.view === "scan" && S.expert ? S.expert : S.result; return `<p class="tiny">${src === S.expert ? "Expert scan" : "Your picks"} · ${new Date(S.result.date).toLocaleDateString()} · ${src.label} confidence (${src.conf}%)</p>`; })()}
   <div class="row"><button class="btn ghost" data-act="retake">Retake analysis</button><a class="btn ghost" id="fb" href="${store.FEEDBACK_URL.startsWith("PASTE") ? "#" : store.FEEDBACK_URL}" target="_blank" rel="noopener">💌 Send feedback</a></div></section>`; },
 };
+const homeTab = () => { const t = S.result && byId[S.result.type];
+  return `<section class="screen">
+  <p class="eyebrow" style="align-self:flex-start">Glowtone beta</p>
+  <h1 class="hi">Hi there 👋</h1>
+  <p class="sub">${t ? `Your season is <b>${t.season} ${t.tone} ${t.sub}</b> (${t.ko}). Ready to glow?` : "Let's find the colors that make you glow, Korean personal color style."}</p>
+  <div class="homecard">${t ? `<div class="mini">${t.best.slice(0, 5).map(([, h]) => `<i style="--c:${h}"></i>`).join("")}</div>` : `<div class="logo big" style="margin:4px auto 10px"></div>`}
+  <button class="btn" data-act="${t ? "toProfile" : "start"}">${t ? "See your season" : "Start analysis"}</button>
+  ${t ? `<button class="link" data-act="retake">Retake analysis</button>` : `<p class="tiny">About 3 minutes · photos never leave your phone</p>`}</div>
+  <div class="soon-card"><b>✨ More coming soon</b><p class="muted">New things to explore with your colors are on the way. Thanks for testing!</p></div></section>`; };
+const panel = (title, sub, id, label, conf, why, ru) => { const t = byId[id];
+  return `<div class="panel" style="--c1:${t.card[0]};--c2:${t.card[1]}"><p class="pk">${title}</p><p class="tiny">${sub}</p>
+  <p class="pt">${t.season} ${t.tone} ${t.sub}</p><p class="sc-ko" lang="ko">${t.ko}</p>
+  <div class="mini">${t.best.slice(0, 6).map(([, h]) => `<i style="--c:${h}"></i>`).join("")}</div>
+  <div class="conf ${label.toLowerCase()}"><b>${label} confidence</b><span>${conf}%</span></div>
+  <ul class="why">${why.map(w => `<li>${esc(w)}</li>`).join("")}</ul><p class="tiny">Runner-up: ${nameOf(byId[ru])}</p></div>`; };
+function agreeNote(r, x) {
+  if (!x) return `<div class="note">Add the photo step for a second opinion from the Expert scan.</div>`;
+  const a = byId[r.type], b = byId[x.type];
+  if (a.id === b.id) return `<div class="note ok">💛 Both agree: you're <b>${nameOf(a)}</b>.</div>`;
+  if (a.season === b.season) return `<div class="note">Same season (${a.season}), different sub-tone. Both palettes will work; try colors from each.</div>`;
+  if (a.tone === b.tone) return `<div class="note">Both say <b>${a.tone.toLowerCase()}</b>, but different seasons. Compare the two palettes in a mirror by a window.</div>`;
+  return `<div class="note warnbg">Your picks and the scan disagree on warm vs cool. Retake the photo by a window with white paper; the scan can be thrown off by lighting.</div>`;
+}
 const soon = (n, d) => `<section class="screen center"><div class="soon">✨</div><h2>${n} is coming soon</h2><p class="muted">${d}</p></section>`;
 const card = t => `<div class="season-card" style="--c1:${t.card[0]};--c2:${t.card[1]}">
   <div class="sc-top"><span class="sc-brand"><span class="logo sm"></span>Glowtone</span><span class="sc-tag">${t.tone} undertone</span></div>
@@ -102,7 +134,9 @@ document.addEventListener("click", e => {
     back: () => S.qi > 0 ? (S.qi--, render()) : go("welcome"),
     skipPhoto: () => finish(),
     snap: () => { const v = document.getElementById("vid"); const c = document.createElement("canvas"); fit(c, v.videoWidth, v.videoHeight); c.getContext("2d").drawImage(v, 0, 0, c.width, c.height); startAnalyze(c); },
-    toHome: () => go("home", { tab: "profile" }),
+    toProfile: () => go("home", { tab: "profile", view: "picks" }),
+    toCamera: () => go("camera"),
+    view: () => { S.view = b.dataset.v; render(); },
     retake: () => go("quiz", { qi: 0, photo: null, drape: null }),
   };
   A[b.dataset.act]?.();
@@ -221,9 +255,11 @@ function labHex({ L, a, b }) { // Lab -> sRGB hex for the skin chip
   return "#" + lin.map(c => { c = Math.max(0, Math.min(1, c)); c = c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055; return Math.round(c * 255).toString(16).padStart(2, "0"); }).join("");
 }
 function finish() {
-  const r = combine(scoreQuiz(S.answers), S.photo, S.drape);
-  S.result = r; store.save({ ...store.load(), answers: S.answers, result: r, photoUsed: !!S.photo?.ok });
+  const r = combine(scoreQuiz(S.answers), null, S.drape); // "Your picks": quiz + drapes only
+  const x = expertScan(S.photo);                           // Expert scan: photo measurements only (independent)
+  S.result = r; S.expert = x; S.view = "picks";
+  store.save({ ...store.load(), answers: S.answers, result: r, expert: x && { type: x.type, runnerUp: x.runnerUp, conf: x.conf, label: x.label, reasons: x.reasons } });
   go("result");
 }
-window.__glowtone = { S, analyze, combine, scoreQuiz }; // debug/test hook
+window.__glowtone = { S, analyze, combine, scoreQuiz, expertScan }; // debug/test hook
 render();

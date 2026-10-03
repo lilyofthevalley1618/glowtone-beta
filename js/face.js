@@ -22,8 +22,9 @@ export async function findFace(canvas) {
     const W = canvas.width, H = canvas.height, bb = d.boundingBox, k = d.keypoints.map(p => ({ x: p.x * W, y: p.y * H }));
     const [e1, e2, nose, mouth] = k, fw = bb.width;
     const cheek = e => ({ x: e.x + 0.25 * (e.x - nose.x), y: e.y + 0.55 * (mouth.y - e.y) });
-    return { cheeks: [cheek(e1), cheek(e2)], eyes: [e1, e2], r: fw * 0.055, eyeR: fw * 0.03,
-      hair: { x: bb.originX + fw * 0.2, y: Math.max(0, bb.originY - bb.height * 0.22), w: fw * 0.6, h: bb.height * 0.12 },
+    const hy = Math.max(0, bb.originY - bb.height * 0.6); // tall strip above the face box; color.js keeps only clearly darker-than-skin pixels as hair
+    return { cheeks: [cheek(e1), cheek(e2)], eyes: [e1, e2], r: fw * 0.055, eyeR: fw * 0.07,
+      hair: { x: bb.originX + fw * 0.15, y: hy, w: fw * 0.7, h: Math.max(4, bb.originY - bb.height * 0.03 - hy) },
       chinY: Math.min(H, bb.originY + bb.height * 1.08), box: bb };
   } catch (e) { console.warn("Face detection unavailable:", e.message); return null; }
 }

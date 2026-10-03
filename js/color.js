@@ -31,6 +31,10 @@ export function analyze(samples) {
   if (!rawSkin) return { ok: false, warnings: ["Couldn't read skin pixels."], rel: { t: 0, v: 0, c: 0 } };
 
   if (samples.paper && samples.paper.length) {
+    const pr = summarize(labsOf(samples.paper, [1, 1, 1]), 0, 1);
+    if (!pr || pr.L < rawSkin.L + 5 || pr.C > 45) { warnings.push("That spot doesn't look like white paper, so we skipped white balance."); samples.paper = null; }
+  }
+  if (samples.paper && samples.paper.length) {
     const lin = [0, 1, 2].map(k => median(samples.paper.map(p => toLin(p[k]))));
     const raw = linToLab(...lin);
     const clipped = samples.paper.filter(p => Math.max(...p) >= 252).length / samples.paper.length > 0.5;
@@ -49,8 +53,20 @@ export function analyze(samples) {
   if (rawSkin.L > 92) { warnings.push("Too bright: your skin is washed out. Avoid direct sun or flash."); rel.t *= 0.6; rel.v *= 0.5; rel.c *= 0.5; }
 
   const skin = summarize(labsOf(samples.skin, gains));
-  const hair = samples.hair && samples.hair.length ? summarize(labsOf(samples.hair, gains), 0, 0.5) : null; // darkest half = hair, not background
-  const eye = samples.eye && samples.eye.length ? summarize(labsOf(samples.eye, gains), 0.15, 0.6) : null;   // skip pupil glints
+  if (!skin) return { ok: false, warnings: ["Couldn't read skin pixels."], rel: { t: 0, v: 0, c: 0 } };
+  // Hair: keep only pixels clearly darker than skin (drops forehead/background), then the darkest half.
+  let hair = null;
+  if (samples.hair && samples.hair.length) {
+    const hl = labsOf(samples.hair, gains).filter(l => l.L < skin.L - 12);
+    if (hl.length >= Math.max(8, samples.hair.length * 0.08)) hair = summarize(hl, 0, 0.5);
+    else { warnings.push("Couldn't find your hair clearly, so contrast is estimated from your eyes."); }
+  }
+  // Eyes: sample area includes eyelid skin, so use the darker part (iris + lashes), skipping the very darkest (pupil).
+  let eye = null;
+  if (samples.eye && samples.eye.length) {
+    const el = labsOf(samples.eye, gains).filter(l => l.L < skin.L - 15);
+    if (el.length >= 6) eye = summarize(el, 0.1, 0.6); else warnings.push("Couldn't read your eye color clearly.");
+  }
 
   if ((skin.h > 200 ? skin.h - 360 : skin.h) < 25 || skin.h > 85 || skin.C < 5) { warnings.push("Your skin reading looks unusual (makeup, filters or a color cast?). Leaning on your quiz."); rel.t *= 0.4; rel.c *= 0.6; }
 
