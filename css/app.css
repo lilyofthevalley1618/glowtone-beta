@@ -228,12 +228,13 @@ h1,h2,.h-name{letter-spacing:-.015em}h3{font-weight:700}
 .ch-bottom .composer{margin:0;width:auto;max-width:none;left:auto;right:auto;bottom:auto}
 
 /* Makeup face map */
-.fm{gap:14px}.fm-wrap{display:flex;justify-content:center}.fm-svg{width:min(100%,260px);height:auto;overflow:visible}
-.fm-line{fill:none;stroke:#A89584;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round}
+.fm{gap:14px}.fm-wrap{display:flex;justify-content:center}.fm-svg{width:min(100%,290px);height:auto;overflow:visible}
+.fm-line{fill:none;stroke:#8E8580;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round}
 .fz{cursor:pointer;outline:none;transition:opacity .2s}.fz:focus-visible{filter:drop-shadow(0 0 3px #8A7466)}.fm-svg:has(.fz.on) .fz:not(.on){opacity:.35}
 .fm-legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .fm-key{font:inherit;font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:7px;background:#F7F2EC;color:var(--ink);border:1px solid transparent;border-radius:999px;padding:6px 12px 6px 7px;cursor:pointer}
 .fm-key i{width:16px;height:16px;border-radius:50%;background:var(--c);box-shadow:inset 0 0 0 1px #3a334014}.fm-key.on{background:#fff;border-color:#D8CABB}
+.fm-thin{stroke-width:.7;opacity:.75}
 .fm-tip{font-size:.92rem;line-height:1.55;color:var(--muted);background:#FBF8F3;border-radius:18px;padding:12px 14px;min-height:3.2em}.fm-tip b{color:var(--ink)}
 
 /* Custom SVG tab icons (same style as the sage dress) */
