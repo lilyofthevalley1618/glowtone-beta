@@ -1,6 +1,6 @@
 // Expert scan: scores measured facial coloring against Korean consultant criteria (docs/korean-12-type-research.md).
 // Independent of quiz + drape picks. Rule-based color science, not AI. Runs on-device.
-import { TYPES } from "./palettes.js?v=20261003b";
+import { TYPES } from "./palettes.js?v=20261003c";
 const cl = (x, a = -1, b = 1) => Math.max(a, Math.min(b, x));
 const wrap = h => h > 200 ? h - 360 : h;
 // P = output of color.analyze(): white-balanced Lab for skin/hair/eye + reliability.

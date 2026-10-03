@@ -226,3 +226,17 @@ h1,h2,.h-name{letter-spacing:-.015em}h3{font-weight:700}
 .rt-cta{font:inherit;text-align:left;border:0;cursor:pointer;color:var(--ink);background:linear-gradient(160deg,#FFFFFF 0%,#F7F1EA 100%);gap:8px}
 .rt-cta-t{font-size:1.15rem;font-weight:700;letter-spacing:-.01em}.rt-cta:active{transform:scale(.99)}
 .ch-bottom .composer{margin:0;width:auto;max-width:none;left:auto;right:auto;bottom:auto}
+
+/* Makeup face map */
+.fm{gap:14px}.fm-wrap{display:flex;justify-content:center}.fm-svg{width:min(100%,260px);height:auto;overflow:visible}
+.fm-line{fill:none;stroke:#A89584;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round}
+.fz{cursor:pointer;outline:none;transition:opacity .2s}.fz:focus-visible{filter:drop-shadow(0 0 3px #8A7466)}.fm-svg:has(.fz.on) .fz:not(.on){opacity:.35}
+.fm-legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.fm-key{font:inherit;font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:7px;background:#F7F2EC;color:var(--ink);border:1px solid transparent;border-radius:999px;padding:6px 12px 6px 7px;cursor:pointer}
+.fm-key i{width:16px;height:16px;border-radius:50%;background:var(--c);box-shadow:inset 0 0 0 1px #3a334014}.fm-key.on{background:#fff;border-color:#D8CABB}
+.fm-tip{font-size:.92rem;line-height:1.55;color:var(--muted);background:#FBF8F3;border-radius:18px;padding:12px 14px;min-height:3.2em}.fm-tip b{color:var(--ink)}
+
+/* Custom SVG tab icons (same style as the sage dress) */
+.tabs button span.ic{height:1.8rem;display:flex;align-items:center;justify-content:center}.tabs button span.ic .tab-ic{width:1.55rem;height:1.55rem;display:block}
+.tabs button .tab-ic{transition:transform .2s,opacity .2s;opacity:.88}.tabs button.on .tab-ic{opacity:1;transform:translateY(-1px) scale(1.06)}
+.tabs button.on{box-shadow:inset 0 0 0 1px #E4D8CB}

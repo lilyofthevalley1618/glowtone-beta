@@ -1,18 +1,19 @@
-import { QUESTIONS, scoreQuiz } from "./quiz.js?v=20261003b";
-import { analyze } from "./color.js?v=20261003b";
-import { combine } from "./classify.js?v=20261003b";
-import { TYPES, byId, nameOf, LEGACY } from "./palettes.js?v=20261003b";
-import { expertScan } from "./expert.js?v=20261003b";
-import { colorOfDay, tipOfDay, dayIndex } from "./daily.js?v=20261003b";
-import { chatView, mountChat } from "./chat.js?v=20261003b";
-import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip, finishSteps } from "./makeup.js?v=20261003b";
-import { picksFor, CHECKED } from "./products.js?v=20261003b";
-import { STEPS as ST_STEPS, quizView, resultsView, styleResult, bodySVG } from "./style.js?v=20261003b";
-import { findFace } from "./face.js?v=20261003b";
-import * as store from "./storage.js?v=20261003b";
-import { openFeedback } from "./feedback.js?v=20261003b";
-import * as glow from "./glow.js?v=20261003b";
-import { SK_STEPS, skQuizView, skResultsView, skinResult } from "./skin.js?v=20261003b";
+import { QUESTIONS, scoreQuiz } from "./quiz.js?v=20261003c";
+import { analyze } from "./color.js?v=20261003c";
+import { combine } from "./classify.js?v=20261003c";
+import { TYPES, byId, nameOf, LEGACY } from "./palettes.js?v=20261003c";
+import { expertScan } from "./expert.js?v=20261003c";
+import { colorOfDay, tipOfDay, dayIndex } from "./daily.js?v=20261003c";
+import { chatView, mountChat } from "./chat.js?v=20261003c";
+import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip, finishSteps } from "./makeup.js?v=20261003c";
+import { picksFor, CHECKED } from "./products.js?v=20261003c";
+import { STEPS as ST_STEPS, quizView, resultsView, styleResult, bodySVG } from "./style.js?v=20261003c";
+import { findFace } from "./face.js?v=20261003c";
+import * as store from "./storage.js?v=20261003c";
+import { openFeedback } from "./feedback.js?v=20261003c";
+import * as glow from "./glow.js?v=20261003c";
+import { faceMap } from "./facemap.js?v=20261003c";
+import { SK_STEPS, skQuizView, skResultsView, skinResult } from "./skin.js?v=20261003c";
 
 const $app = document.getElementById("app"), $tabs = document.getElementById("tabs");
 const saved = store.load();
@@ -106,8 +107,10 @@ const prodCard = (p, kind) => `<div class="pc"><div class="pc-sw">${swatchSVG(ki
   <p class="pc-brand">${esc(p.line.brand)}</p><p class="pc-name">${esc(p.line.name)}</p><p class="pc-shade">${esc(p.shade)}</p>
   <p class="pc-note">${esc(p.note)}${p.other ? ` · also ${esc(p.other.filter(o => o !== p.shade).join(", "))}` : ""}</p>
   <p class="pc-meta">About $${Math.round(p.line.price)}, checked ${CHECKED} · <a href="${esc(p.line.url)}" target="_blank" rel="noopener">View product</a></p></div></div>`;
+let FM = [undefined, undefined, true]; // last face-map args, so a tap can redraw just the map
+const fmHTML = () => faceMap(...FM, S.fz);
 const makeupTab = () => {
-  if (!S.result) return `<section class="screen home mkup"><div class="h-block"><p class="h-label">Makeup</p><p class="h-name">Your shades, in one place</p><p class="h-text">Lip, blush and eye shades plus product picks will appear here once you know your personal color.</p></div><button class="link h-start" data-act="start">Take the analysis →</button></section>`;
+  if (!S.result) return `<section class="screen home mkup"><div class="h-block"><p class="h-label">Makeup</p><p class="h-name">Your shades, in one place</p><p class="h-text">Lip, blush and eye shades plus product picks will appear here once you know your personal color.</p></div><button class="link h-start" data-act="start">Take the analysis →</button>${(FM = [undefined, undefined, true], fmHTML())}</section>`;
   const t = byId[(S.view === "scan" && S.expert ? S.expert : S.result).type], M = MAKEUP[t.id], P = store.load().mk || {};
   const bold = P.look === "bold", ord = a => bold ? [...a].reverse() : a; // lists run soft → bold
   const tone = S.expert && byId[S.expert.type].tone !== byId[S.result.type].tone ? "Neutral" : t.tone;
@@ -123,6 +126,7 @@ const makeupTab = () => {
     <div class="seg sm">${opt("finish", "matte", "Matte")}${opt("finish", "satin", "Satin")}${opt("finish", "dewy", "Dewy")}</div>
     <div class="seg sm">${opt("look", "everyday", "Everyday")}${opt("look", "bold", "Bold")}</div>
     ${fin ? `<p class="h-text">${esc(finishTip(fin, t))}</p><ul class="cg-list">${finishSteps(fin, t).map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : `<p class="h-fine">Pick a finish to filter the product picks and tips.</p>`}</div>
+  ${(FM = [{ base: PK.base[0]?.hex, blush: ord(M.blush)[0][1], contour: t.tone === "Warm" ? "#A8846A" : "#958389", hi: t.tone === "Warm" ? "#F6E3C8" : "#F3ECF5", lip: ord(M.lip)[0][1], eye: M.eyes[0][1] }, fin, t.tone === "Warm"], fmHTML())}
   <div class="cg-card">${order.map((k, i) => mkRow(secs[k][0], secs[k][1], i === 0 && P.look)).join("")}</div>
   <div class="h-block"><p class="h-label">Product picks</p><p class="h-fine">Affordable K-beauty matched to ${t.season} ${t.sub}${fin ? `, ${fin} finish` : ""}. Shade colors are approximate. Prices are rough and can change.</p></div>
   ${porder.map(k => `<div class="cg-card"><p class="h-label">${ptitle[k]}</p>${PK[k].length ? PK[k].map(p => prodCard(p, k)).join("") : `<p class="h-fine">No ${fin} picks here yet.</p>`}</div>`).join("")}
@@ -206,6 +210,7 @@ function render() {
 }
 
 // ---------- actions ----------
+document.addEventListener("keydown", e => { const z = e.target.closest?.(".fz"); if (z && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); z.dispatchEvent(new MouseEvent("click", { bubbles: true })); } });
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-act],[data-tab]"); if (!b) return;
   if (b.dataset.tab) { S.tab = b.dataset.tab; return go("home"); }
@@ -237,6 +242,8 @@ document.addEventListener("click", e => {
     stNext: () => stNext(),
     unlock: () => alert("Premium checkout is coming soon. During the beta everything is free! 💛"),
     lockLater: () => go("home", { tab: "home" }),
+    fzone: () => { const z = b.dataset.z; S.fz = S.fz === z ? null : z; const tmp = document.createElement("div"); tmp.innerHTML = fmHTML(); const nf = tmp.firstElementChild; b.closest(".fm").replaceWith(nf);
+      nf.querySelector(`${b.tagName.toLowerCase() === "button" ? ".fm-key" : ".fz"}[data-z="${z}"]`)?.focus(); },
     rtStart: () => { S.tab = "skin"; S.skin = { i: 0, ans: {}, quiz: true }; go("home"); window.scrollTo(0, 0); },
     rtTog: () => { glow.toggle(b.dataset.p, b.dataset.s); render(); },
     wxGeo: () => glow.useGeo(render),

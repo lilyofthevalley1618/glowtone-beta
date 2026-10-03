@@ -1,6 +1,6 @@
 // Home: routine checklist, glow streak and skin weather. All stored on the device; weather from Open-Meteo (free, no key).
-import * as store from "./storage.js?v=20261003b";
-import { skinResult, routine } from "./skin.js?v=20261003b";
+import * as store from "./storage.js?v=20261003c";
+import { skinResult, routine } from "./skin.js?v=20261003c";
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const ymd = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; // local date
 const yesterday = () => { const d = new Date(); d.setDate(d.getDate() - 1); return ymd(d); };
