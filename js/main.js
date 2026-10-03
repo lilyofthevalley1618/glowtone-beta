@@ -108,7 +108,8 @@ const prodCard = (p, kind) => `<div class="pc"><div class="pc-sw">${swatchSVG(ki
   <p class="pc-note">${esc(p.note)}${p.other ? ` · also ${esc(p.other.filter(o => o !== p.shade).join(", "))}` : ""}</p>
   <p class="pc-meta">About $${Math.round(p.line.price)}, checked ${CHECKED} · <a href="${esc(p.line.url)}" target="_blank" rel="noopener">View product</a></p></div></div>`;
 let FM = [undefined, undefined, true]; // last face-map args, so a tap can redraw just the map
-const fmHTML = () => faceMap(...FM, S.fz);
+const SHOW_FACE_MAP = false; // face map hidden for now (to be redesigned); flip to true to re-enable
+const fmHTML = () => (SHOW_FACE_MAP ? faceMap(...FM, S.fz) : "");
 const makeupTab = () => {
   if (!S.result) return `<section class="screen home mkup"><div class="h-block"><p class="h-label">Makeup</p><p class="h-name">Your shades, in one place</p><p class="h-text">Lip, blush and eye shades plus product picks will appear here once you know your personal color.</p></div><button class="link h-start" data-act="start">Take the analysis →</button>${(FM = [undefined, undefined, true], fmHTML())}</section>`;
   const t = byId[(S.view === "scan" && S.expert ? S.expert : S.result).type], M = MAKEUP[t.id], P = store.load().mk || {};
