@@ -11,6 +11,7 @@ import { STEPS as ST_STEPS, quizView, resultsView, styleResult, bodySVG } from "
 import { findFace } from "./face.js?v=20261003b";
 import * as store from "./storage.js?v=20261003b";
 import { openFeedback } from "./feedback.js?v=20261003b";
+import * as glow from "./glow.js?v=20261003b";
 import { SK_STEPS, skQuizView, skResultsView, skinResult } from "./skin.js?v=20261003b";
 
 const $app = document.getElementById("app"), $tabs = document.getElementById("tabs");
@@ -173,6 +174,8 @@ const homeTab = () => { const st = store.load(), t = S.result && byId[(S.view ==
     ${t ? `<p class="h-text">You're <b>${t.season} ${t.tone} ${t.sub}</b> <span lang="ko">${t.ko}</span></p>` : `<button class="link h-start" data-act="start">Start your color analysis →</button>`}</div>
   <div class="card cod"><p class="h-label">Color of the day</p><div class="h-color"><i style="--c:${c.hex}"></i><div><p class="h-name">${esc(c.name)}</p><p class="h-text">${esc(c.tip)}</p></div></div></div>
   <div class="card"><p class="h-label">K-beauty tip</p><p class="h-body">${esc(tipOfDay())}</p><p class="h-fine">General tips, not medical advice.</p></div>
+  ${glow.routineCard()}
+  ${glow.weatherCard()}
   <div><p class="h-label" style="margin-bottom:12px">Quick start</p><div class="qs-row">${qs("style", "Style", st.style ? "See your style" : "8 quick questions", !!st.style)}${qs("makeup", "Makeup", st.mkSeen ? "Your shades" : "Find your shades", !!st.mkSeen)}${qs("skin", "Skin", st.skin ? "Your routine" : "12 quick questions", !!st.skin)}</div></div>
   ${idea ? `<div class="card"><p class="h-label">Style idea of the day</p><div class="st-outfit">${idea.colors.map(([n, h]) => `<i style="--c:${h}" title="${esc(n)}"></i>`).join("")}</div><p class="h-body">${esc(idea.text)}</p>${idea.nudge ? `<button class="link h-start" data-tab="style">Take the Style quiz for ideas that fit your shape →</button>` : ""}</div>` : `<div class="card"><p class="h-label">Style idea of the day</p><p class="h-body">Find your season and you'll get a fresh outfit idea in your colors every day.</p><button class="link h-start" data-act="start">Start your color analysis →</button></div>`}
   <div class="h-soon"><p class="h-label">Product picks</p><p class="h-fine">Coming soon</p></div>
@@ -204,6 +207,7 @@ function render() {
   $tabs.hidden = S.screen !== "home";
   $tabs.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.tab === S.tab));
   if (S.screen === "camera") startCam();
+  if (S.screen === "home" && S.tab === "home") { glow.refreshWeather(() => { if (S.screen === "home" && S.tab === "home") render(); }); const ci = document.getElementById("wxCity"); if (ci) ci.onkeydown = e => { if (e.key === "Enter") glow.setCity(ci.value, render); }; }
   if (S.screen === "home" && S.tab === "chat") { S.chat = mountChat(S, render); if (S.pendingChat) { const q = S.pendingChat; S.pendingChat = null; S.chat.send(q); } }
   if (S.screen === "home" && S.tab === "makeup" && S.result && !store.isLocked("makeup") && !store.load().mkSeen) store.save({ ...store.load(), mkSeen: true });
 }
@@ -240,6 +244,11 @@ document.addEventListener("click", e => {
     stNext: () => stNext(),
     unlock: () => alert("Premium checkout is coming soon. During the beta everything is free! 💛"),
     lockLater: () => go("home", { tab: "home" }),
+    rtTog: () => { glow.toggle(b.dataset.p, b.dataset.s); render(); },
+    wxGeo: () => glow.useGeo(render),
+    wxCity: () => glow.setCity(document.getElementById("wxCity")?.value, render),
+    wxUnit: () => { const st = store.load(); store.save({ ...st, wunit: (st.wunit || "F") === "F" ? "C" : "F" }); render(); },
+    wxEdit: () => { glow.wxEdit(); render(); },
     fbOpen: () => openFeedback(S.result?.type),
     nameEdit: () => { S.nameEdit = true; render(); setTimeout(() => document.getElementById("nameIn")?.focus(), 30); },
     nameSave: () => { const v = (document.getElementById("nameIn").value || "").trim().slice(0, 24); store.save({ ...store.load(), name: v, nameAsked: true }); S.nameEdit = false; render(); },
