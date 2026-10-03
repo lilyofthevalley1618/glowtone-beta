@@ -1,44 +1,56 @@
-// Makeup face placement map: line-drawing face (inline SVG) with soft zones in the user's season shades.
+// Makeup placement by face shape: 6 minimal outline faces with crisp, flat highlight / contour / blush shapes
+// (placements adapted from a classic contour chart). Tap a face or legend item for a short tip.
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const DEF = { base: "#E8C8AE", blush: "#E7A7A0", contour: "#A88B7A", hi: "#F6EADB", lip: "#D27C7C", eye: "#C9A28C" };
-// c: colors {base, blush, contour, hi, lip, eye}; finish: matte|satin|dewy|undefined
-export function zones(c, finish, warm) {
-  const dewy = finish === "dewy", matte = finish === "matte";
-  return [
-    ["base", "Cushion", c.base, `${dewy ? "Dewy" : matte ? "Soft-matte" : "Glow"} cushion. Tap a thin layer in the center of the face and the T-zone with the puff, then press it outward so it fades at the edges.`],
-    ["blush", "Blush", c.blush, `${dewy ? "Cream or liquid" : "Powder"} blush. Smile, tap it on the apples and upper cheeks, then blend up and out slightly toward the temples. Keep it soft and sheer.`],
-    ["contour", "Contour", c.contour, `A ${warm ? "soft warm-brown" : "cool taupe"} contour powder or stick. Use a light touch under the cheekbones, along the jaw edge and down the sides of the nose, then blend well.`],
-    ["hi", "Highlight", c.hi, `${matte ? "A satin" : "A sheer, glowy"} highlighter. Dab it on the nose bridge, the tops of the cheekbones, the cupid's bow and the chin.`],
-    ["lip", "Lip tint", c.lip, `${dewy ? "Glossy or water tint" : matte ? "Velvet tint" : "Tint"}, Korean gradient style. Dab it in the center of the lips, press the lips together, then blur the edges with a fingertip.`],
-    ["eye", "Eyes", c.eye, "Eyeshadow on the lids: sweep a light base over the lid and a slightly deeper shade near the lash line. For aegyo-sal, add a little shimmer just under the lower lash line."]];
+const DEF = { base: "#E8C8AE", blush: "#EFA7A7", contour: "#A8846A", hi: "#FFFDF8", lip: "#D98A86" };
+const mix = (a, b, t) => "#" + [1, 3, 5].map(i => Math.round(parseInt(a.substr(i, 2), 16) * (1 - t) + parseInt(b.substr(i, 2), 16) * t).toString(16).padStart(2, "0")).join("");
+// Each face: outline path (160x190 box) and left-side placements (mirrored), plus centered extras.
+// h/c = highlight/contour stroke bands [d, width]; b = blush ellipses [cx, cy, rx, ry]; dot = highlight blobs [cx, cy, rx, ry]
+const NOSE_C = [["M66 76Q73 80 73.5 92L73.5 108Q72 118 79 121", 4.5]], BRIDGE = [["M80 92L80 112", 5]];
+const FACES = [
+  { id: "oval", name: "Oval Face", path: "M80 22C112 22 128 50 128 88 128 128 108 166 80 170 52 166 32 128 32 88 32 50 48 22 80 22Z",
+    h: [["M44 82Q43 62 60 57", 6], ["M70 98L59 109", 6], ["M50 122L60 115", 6], ["M60 131Q60 150 72 158", 6]], c: [["M38 96Q41 130 58 156", 5]],
+    b: [[50, 104, 9, 7], [80, 166, 6, 4, 1]], dot: [[80, 38, 13, 7]],
+    tip: "Balanced already, so keep it light. Contour softly along the outer cheeks and nose sides, brighten the forehead, under-eyes and around the mouth, and tap blush on the outer cheeks plus a touch on the chin." },
+  { id: "long", name: "Long Face", path: "M80 14C108 14 122 42 122 84 122 128 108 168 80 176 52 168 38 128 38 84 38 42 52 14 80 14Z",
+    h: [["M43 70L43 90", 6], ["M70 84Q72 96 62 100", 6], ["M51 124L61 116", 6]], c: [], b: [[54, 106, 11, 5]], dot: [[80, 30, 12, 6]],
+    xh: [["M64 160Q80 168 96 160", 6]], xc: [["M62 168Q80 177 98 168", 4.5]],
+    tip: "Shorten the face visually. Shade under the chin, keep highlight in short strokes (temples, inner under-eyes, a small chin curve), and sweep blush horizontally across the cheeks." },
+  { id: "round", name: "Square/Round Face", path: "M80 24C114 24 132 46 132 84 132 118 130 146 116 160 106 168 94 172 80 172 66 172 54 168 44 160 30 146 28 118 28 84 28 46 46 24 80 24Z",
+    h: [["M68 96L58 108", 6], ["M63 133Q61 150 72 160", 6]], c: [["M35 132Q39 154 54 163", 5.5]], b: [[47, 104, 12, 11]], dot: [],
+    xh: [["M52 61Q80 52 108 61", 6]], xdot: [[80, 115, 3.6, 3.6]],
+    tip: "Soften the jaw corners with contour, add a band of highlight across the forehead and around the chin to lengthen, and use round blush on the apples of the cheeks." },
+  { id: "diamond", name: "Diamond Face", path: "M80 22C98 22 108 36 114 56 120 74 130 88 130 100 130 124 104 158 80 172 56 158 30 124 30 100 30 88 40 74 46 56 52 36 62 22 80 22Z",
+    h: [["M46 64L44 86", 7], ["M70 98L58 110", 7], ["M53 128L62 120", 6], ["M58 146L68 157", 7]], c: [["M35 97L46 111", 6]], b: [[50, 104, 7, 8], [80, 115, 3.4, 3, 1]], dot: [[80, 36, 10, 7]],
+    xc: [["M70 168Q80 173 90 168", 4.5]],
+    tip: "Widen the forehead and chin with highlight, tuck contour just under the widest part of the cheekbones and under the chin, and keep blush small and high." },
+  { id: "high", name: "High Cheekbones", path: "M80 22C108 22 124 42 128 66 131 82 132 94 126 110 116 140 98 164 80 170 62 164 44 140 34 110 28 94 29 82 32 66 36 42 52 22 80 22Z",
+    h: [["M42 76L58 97", 7], ["M70 96L63 106", 6], ["M55 136Q62 155 80 162", 6]], c: [["M37 90L53 119", 6]], b: [[56, 110, 6.5, 7.5]], dot: [[80, 34, 10, 6]],
+    tip: "Follow the cheekbone: a diagonal contour band just under it, highlight in a lifted line above it and along the jaw, and a small blush between the two." },
+  { id: "concave", name: "Concave Face", path: "M80 22C112 22 128 46 128 80 128 96 124 104 120 114 118 122 120 134 114 148 106 162 94 170 80 172 66 170 54 162 46 148 40 134 42 122 40 114 36 104 32 96 32 80 32 46 48 22 80 22Z",
+    h: [["M46 70Q52 56 72 56", 6], ["M40 66L40 90", 6], ["M70 96L60 108", 7], ["M51 122L61 114", 6], ["M47 133L58 147", 6]], c: [["M38 96Q41 116 44 132", 5], ["M58 158Q69 169 80 171", 4.5]], b: [[52, 104, 8, 7]], dot: [[80, 34, 10, 6]],
+    tip: "Fill out hollow cheeks with light: highlight the temples, under-eyes and lower cheeks, keep contour very thin along the outer edge, and add soft blush on the upper cheeks." }];
+const LEG = [["hi", "Highlight", "Highlight (cream, stick or powder) goes where light hits: forehead center, under-eye, nose bridge and chin. Tap it on, then blend only the edges."],
+  ["contour", "Contour", "Contour a shade or two deeper than your cushion, in a cool-taupe or soft-brown that suits your tone. Draw thin lines, then tap to soften."],
+  ["blush", "Blush", "Blush in your season shade. Smile and tap it on the apples or upper cheeks, following the shape shown for your face."]];
+const band = (arr, col) => (arr || []).map(([d, w]) => `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`).join("");
+const ell = (arr, col) => (arr || []).map(([cx, cy, rx, ry]) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${col}"/>`).join("");
+function face(f, k, sel) {
+  const mir = s => `${s}<g transform="translate(160 0) scale(-1 1)">${s}</g>`;
+  const side = band(f.c.concat(NOSE_C), k.contour) + band(f.h, k.hi) + ell(f.b.filter(e => !e[4]), k.blush);
+  const mid = band(f.xc, k.contour) + band(BRIDGE.concat(f.xh || []), k.hi) + ell((f.dot || []).concat(f.xdot || []), k.hi) + ell(f.b.filter(e => e[4]), k.blush);
+  const feat = mir(`<path d="M52 87Q60 94 68 87"/><path d="M53.6 89.4l-3 1.8M56.6 91.6l-1.8 2.6" class="fs-lash"/>`) + `<path d="M77.5 119q2.5 2.6 5 0"/>`;
+  return `<button class="fs-face${sel === f.id ? " on" : ""}" data-act="fzone" data-z="${f.id}" aria-pressed="${sel === f.id}" aria-label="${f.name}: show tip">
+  <svg viewBox="24 10 112 168" aria-hidden="true"><defs><clipPath id="fs-${f.id}"><path d="${f.path}"/></clipPath></defs>
+  <path d="${f.path}" fill="${k.skin}"/><g clip-path="url(#fs-${f.id})">${mir(side)}${mid}</g>
+  <path d="M72 139Q76 135.6 80 138.2 84 135.6 88 139 84 144.4 80 144.4 76 144.4 72 139Z" fill="${k.lip}"/>
+  <g class="fs-line"><path d="${f.path}"/>${feat}</g></svg><span>${f.name}</span></button>`;
 }
 export function faceMap(c = DEF, finish, warm = true, sel) {
-  c = { ...DEF, ...c }; const Z = zones(c, finish, warm), tip = Z.find(z => z[0] === sel);
-  const g = (id, label, inner) => `<g class="fz${sel === id ? " on" : ""}" data-act="fzone" data-z="${id}" role="button" tabindex="0" aria-label="${label}: show tip" aria-pressed="${sel === id}">${inner}</g>`;
-  // Cute, minimal sticker-style face: closed smiling eyes, soft bob, round cheeks. Right-side features mirror the left via <use>.
-  const M = 'transform="translate(240 0) scale(-1 1)"', HAIR = "#F1E9E0", SKIN = "#FFFCF8";
-  const svg = `<svg class="fm-svg" viewBox="0 18 240 236" role="group" aria-label="Face map: where to apply makeup">
-  <defs><linearGradient id="fmLip" x1="0" x2="1"><stop offset="0" stop-color="${c.lip}" stop-opacity=".35"/><stop offset=".5" stop-color="${c.lip}" stop-opacity=".9"/><stop offset="1" stop-color="${c.lip}" stop-opacity=".35"/></linearGradient>
-  <g id="fmEyeL"><path class="fm-line fm-eye" d="M81 134Q92 145 103 134"/><path class="fm-line fm-lash" d="M83.2 136.6l-4 2.2M86.6 139.4l-2.6 3.4"/></g></defs>
-  <g class="fm-line" pointer-events="none">
-    <path fill="${HAIR}" d="M120 30C180 30 210 76 208 134 207 166 206 188 198 204Q190 214 178 208Q164 197 150 196L90 196Q76 197 62 208Q50 214 42 204C34 188 33 166 32 134 30 76 60 30 120 30Z"/>
-    <path fill="${SKIN}" d="M64 254C66 236 86 226 106 223L106 204 134 204 134 223C154 226 174 236 176 254"/>
-  </g>
-  <path fill="${SKIN}" d="M120 54C168 54 190 90 190 130 190 178 160 210 120 210S50 178 50 130C50 90 72 54 120 54Z"/>
-  ${g("base", "Cushion", `<ellipse cx="120" cy="148" rx="46" ry="44" fill="${c.base}" opacity=".2"/>`)}
-  ${g("contour", "Contour", `<g fill="${c.contour}" opacity=".32"><path id="fmConL" d="M54 150C56 172 66 190 84 202 72 191 62 175 59 150 58 146 54 146 54 150Z"/><use href="#fmConL" ${M}/></g>`)}
-  ${g("blush", "Blush", `<g fill="${c.blush}" opacity=".55"><ellipse cx="78" cy="160" rx="17" ry="11"/><ellipse cx="162" cy="160" rx="17" ry="11"/></g>`)}
-  ${g("hi", "Highlight", `<g fill="${c.hi}"><ellipse cx="120" cy="108" rx="10" ry="5.5"/><ellipse cx="120" cy="146" rx="2.8" ry="7"/><circle cx="101" cy="154" r="3.6"/><circle cx="139" cy="154" r="3.6"/><ellipse cx="120" cy="196" rx="7.5" ry="3.6"/></g>`)}
-  ${g("eye", "Eyes", `<g><path id="fmLidL" fill="${c.eye}" opacity=".5" d="M81 134Q92 123 103 134Q92 145 81 134Z"/><use href="#fmLidL" ${M}/><path id="fmAegL" fill="${c.hi}" d="M83 141Q92 153 101 141Q92 145 83 141Z"/><use href="#fmAegL" ${M}/></g>`)}
-  ${g("lip", "Lip tint", `<path fill="url(#fmLip)" d="M111 172Q115.5 168.4 120 171 124.5 168.4 129 172 124.8 178 120 178 115.2 178 111 172Z"/>`)}
-  <g class="fm-line" pointer-events="none">
-    <path d="M120 54C168 54 190 90 190 130 190 178 160 210 120 210S50 178 50 130C50 90 72 54 120 54Z"/>
-    <path fill="${HAIR}" d="M52 116C54 76 82 52 120 52S186 76 188 116C180 98 164 86 146 82 136 92 118 96 100 94 84 94 66 102 52 116Z"/>
-    <use href="#fmEyeL"/><use href="#fmEyeL" ${M}/>
-    <path d="M117.4 156.4q2.6 3 5.2 0"/>
-    <path class="fm-lipline" d="M111 172Q115.5 168.4 120 171 124.5 168.4 129 172 124.8 178 120 178 115.2 178 111 172ZM112.4 172.4Q120 174.4 127.6 172.4"/>
-  </g></svg>`;
-  const legend = `<div class="fm-legend" role="group" aria-label="Makeup zones">${Z.map(([id, n, col]) => `<button class="fm-key${sel === id ? " on" : ""}" data-act="fzone" data-z="${id}" aria-pressed="${sel === id}"><i style="--c:${col}"></i>${n}</button>`).join("")}</div>`;
-  return `<div class="cg-card fm"><p class="h-label">Where it goes</p><div class="fm-wrap">${svg}</div>${legend}
-  <p class="fm-tip" id="fmTip" aria-live="polite">${tip ? `<b>${tip[1]}.</b> ${esc(tip[3])}` : "Tap a zone or a name to see a quick how-to."}</p></div>`;
+  c = { ...DEF, ...c };
+  const k = { skin: mix(c.base || DEF.base, "#ffffff", .55), hi: "#FFFDF8", contour: c.contour, blush: c.blush, lip: c.lip };
+  const legend = `<div class="fm-legend" role="group" aria-label="Legend">${LEG.map(([id, n]) => `<button class="fm-key${sel === id ? " on" : ""}" data-act="fzone" data-z="${id}" aria-pressed="${sel === id}"><i style="--c:${k[id]}"></i>${n}</button>`).join("")}</div>`;
+  const f = FACES.find(x => x.id === sel), l = LEG.find(x => x[0] === sel), tip = f ? [f.name, f.tip] : l ? [l[1], l[2]] : null;
+  return `<div class="cg-card fm"><p class="h-label">Where it goes, by face shape</p>${legend}
+  <div class="fs-grid" role="group" aria-label="Face shapes">${FACES.map(x => face(x, k, sel)).join("")}</div>
+  <p class="fm-tip" id="fmTip" aria-live="polite">${tip ? `<b>${tip[0]}.</b> ${esc(tip[1])}` : "Tap your face shape to see where highlight, contour and blush go."}</p></div>`;
 }

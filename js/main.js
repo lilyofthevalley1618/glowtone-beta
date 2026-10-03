@@ -108,7 +108,7 @@ const prodCard = (p, kind) => `<div class="pc"><div class="pc-sw">${swatchSVG(ki
   <p class="pc-note">${esc(p.note)}${p.other ? ` · also ${esc(p.other.filter(o => o !== p.shade).join(", "))}` : ""}</p>
   <p class="pc-meta">About $${Math.round(p.line.price)}, checked ${CHECKED} · <a href="${esc(p.line.url)}" target="_blank" rel="noopener">View product</a></p></div></div>`;
 let FM = [undefined, undefined, true]; // last face-map args, so a tap can redraw just the map
-const SHOW_FACE_MAP = true; // v2 fashion-illustration face map (local, pending review)
+const SHOW_FACE_MAP = true; // v4 face-shape placement grid (local, pending review)
 const fmHTML = () => (SHOW_FACE_MAP ? faceMap(...FM, S.fz) : "");
 const makeupTab = () => {
   if (!S.result) return `<section class="screen home mkup"><div class="h-block"><p class="h-label">Makeup</p><p class="h-name">Your shades, in one place</p><p class="h-text">Lip, blush and eye shades plus product picks will appear here once you know your personal color.</p></div><button class="link h-start" data-act="start">Take the analysis →</button>${(FM = [undefined, undefined, true], fmHTML())}</section>`;
@@ -127,7 +127,7 @@ const makeupTab = () => {
     <div class="seg sm">${opt("finish", "matte", "Matte")}${opt("finish", "satin", "Satin")}${opt("finish", "dewy", "Dewy")}</div>
     <div class="seg sm">${opt("look", "everyday", "Everyday")}${opt("look", "bold", "Bold")}</div>
     ${fin ? `<p class="h-text">${esc(finishTip(fin, t))}</p><ul class="cg-list">${finishSteps(fin, t).map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : `<p class="h-fine">Pick a finish to filter the product picks and tips.</p>`}</div>
-  ${(FM = [{ base: PK.base[0]?.hex, blush: ord(M.blush)[0][1], contour: t.tone === "Warm" ? "#A8846A" : "#958389", hi: t.tone === "Warm" ? "#F6E3C8" : "#F3ECF5", lip: ord(M.lip)[0][1], eye: M.eyes[0][1] }, fin, t.tone === "Warm"], fmHTML())}
+  ${(FM = [{ base: PK.base[0]?.hex, blush: ord(M.blush)[0][1], contour: t.tone === "Warm" ? "#A8846A" : "#958389", lip: ord(M.lip)[0][1], eye: M.eyes[0][1] }, fin, t.tone === "Warm"], fmHTML())}
   <div class="cg-card">${order.map((k, i) => mkRow(secs[k][0], secs[k][1], i === 0 && P.look)).join("")}</div>
   <div class="h-block"><p class="h-label">Product picks</p><p class="h-fine">Affordable K-beauty matched to ${t.season} ${t.sub}${fin ? `, ${fin} finish` : ""}. Shade colors are approximate. Prices are rough and can change.</p></div>
   ${porder.map(k => `<div class="cg-card"><p class="h-label">${ptitle[k]}</p>${PK[k].length ? PK[k].map(p => prodCard(p, k)).join("") : `<p class="h-fine">No ${fin} picks here yet.</p>`}</div>`).join("")}
@@ -244,7 +244,7 @@ document.addEventListener("click", e => {
     unlock: () => alert("Premium checkout is coming soon. During the beta everything is free! 💛"),
     lockLater: () => go("home", { tab: "home" }),
     fzone: () => { const z = b.dataset.z; S.fz = S.fz === z ? null : z; const tmp = document.createElement("div"); tmp.innerHTML = fmHTML(); const nf = tmp.firstElementChild; b.closest(".fm").replaceWith(nf);
-      nf.querySelector(`${b.tagName.toLowerCase() === "button" ? ".fm-key" : ".fz"}[data-z="${z}"]`)?.focus(); },
+      nf.querySelector(`[data-act="fzone"][data-z="${z}"]`)?.focus(); },
     rtStart: () => { S.tab = "skin"; S.skin = { i: 0, ans: {}, quiz: true }; go("home"); window.scrollTo(0, 0); },
     rtTog: () => { glow.toggle(b.dataset.p, b.dataset.s); render(); },
     wxGeo: () => glow.useGeo(render),

@@ -241,3 +241,8 @@ h1,h2,.h-name{letter-spacing:-.015em}h3{font-weight:700}
 .tabs button span.ic{height:1.8rem;display:flex;align-items:center;justify-content:center}.tabs button span.ic .tab-ic{width:1.55rem;height:1.55rem;display:block}
 .tabs button .tab-ic{transition:transform .2s,opacity .2s;opacity:.88}.tabs button.on .tab-ic{opacity:1;transform:translateY(-1px) scale(1.06)}
 .tabs button.on{box-shadow:inset 0 0 0 1px #E4D8CB}
+.fs-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 8px}
+.fs-face{font:inherit;background:#FBF8F3;border:1.5px solid transparent;border-radius:20px;padding:10px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:var(--ink)}
+.fs-face svg{width:100%;max-width:130px;height:auto;display:block}.fs-face span{font-size:.84rem;font-weight:700}
+.fs-face.on{background:#fff;border-color:#D8CABB}.fs-face:focus-visible,.fm-key:focus-visible{outline:2px solid #8A7466;outline-offset:2px}
+.fs-line{fill:none;stroke:#A89584;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.fs-lash{stroke-width:1.4}
