@@ -1,4 +1,4 @@
-import { TYPES } from "./palettes.js";
+import { TYPES } from "./palettes.js?v=20261003a";
 const W = { t: 1.6, v: 1, c: 1 }; // temperature decides warm vs cool first (Korean method)
 const dist = (a, p) => Math.sqrt(W.t * (a.t - p[0]) ** 2 + W.v * (a.v - p[1]) ** 2 + W.c * (a.c - p[2]) ** 2);
 // sources: quiz {t,v,c}; photo {axes, rel}|null; drape {t,v,c,n}|null

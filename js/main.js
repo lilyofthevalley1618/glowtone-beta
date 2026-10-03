@@ -1,14 +1,14 @@
-import { QUESTIONS, scoreQuiz } from "./quiz.js";
-import { analyze } from "./color.js";
-import { combine } from "./classify.js";
-import { TYPES, byId, nameOf, LEGACY } from "./palettes.js";
-import { expertScan } from "./expert.js";
-import { colorOfDay, tipOfDay, dayIndex } from "./daily.js";
-import { chatView, mountChat } from "./chat.js";
-import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip } from "./makeup.js";
-import { STEPS as ST_STEPS, quizView, resultsView, styleResult, bodySVG } from "./style.js";
-import { findFace } from "./face.js";
-import * as store from "./storage.js";
+import { QUESTIONS, scoreQuiz } from "./quiz.js?v=20261003a";
+import { analyze } from "./color.js?v=20261003a";
+import { combine } from "./classify.js?v=20261003a";
+import { TYPES, byId, nameOf, LEGACY } from "./palettes.js?v=20261003a";
+import { expertScan } from "./expert.js?v=20261003a";
+import { colorOfDay, tipOfDay, dayIndex } from "./daily.js?v=20261003a";
+import { chatView, mountChat } from "./chat.js?v=20261003a";
+import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip } from "./makeup.js?v=20261003a";
+import { STEPS as ST_STEPS, quizView, resultsView, styleResult, bodySVG } from "./style.js?v=20261003a";
+import { findFace } from "./face.js?v=20261003a";
+import * as store from "./storage.js?v=20261003a";
 
 const $app = document.getElementById("app"), $tabs = document.getElementById("tabs");
 const saved = store.load();
