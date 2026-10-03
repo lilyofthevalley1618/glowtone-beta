@@ -5,6 +5,7 @@ import { TYPES, byId, nameOf, LEGACY } from "./palettes.js";
 import { expertScan } from "./expert.js";
 import { colorOfDay, tipOfDay } from "./daily.js";
 import { chatView, mountChat } from "./chat.js";
+import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip } from "./makeup.js";
 import { findFace } from "./face.js";
 import * as store from "./storage.js";
 
@@ -71,24 +72,45 @@ result: () => { const r = S.result, x = S.expert;
 home: () => {
   if (S.tab === "home") return homeTab();
   if (S.tab === "chat") return chatView(S);
+  if (S.tab === "makeup") return makeupTab();
   const t = S.result ? byId[(S.view === "scan" && S.expert ? S.expert : S.result).type] : null;
   if (!t) return soon("Profile", "Finish an analysis to see your season, palettes and makeup colors here.") + `<div class="row"><button class="btn" data-act="start">Start analysis</button></div>`;
   if (S.tab === "style") return soon("Style", "Flattering cuts and outfit colors for your type, with optional body questions. Body-positive, always.");
   if (S.tab === "skin") return soon("Skin", "A Korean skincare quiz with researched K-beauty routines. Not medical advice.");
   const m = t.makeup;
-  const sw2 = S.expert && S.expert.type !== S.result.type ? `<div class="seg"><button class="${S.view !== "scan" ? "on" : ""}" data-act="view" data-v="picks">Your picks</button><button class="${S.view === "scan" ? "on" : ""}" data-act="view" data-v="scan">Expert scan</button></div>` : "";
+  const sw2 = viewSwitch();
   return `<section class="screen">${sw2}${card(t)}
   <p class="traits">${esc(t.traits)}</p><p>${esc(t.desc)}</p>
   <h3>Best colors</h3><div class="grid">${sw(t.best)}</div>
   <h3>Colors to avoid near your face</h3><div class="grid">${sw(t.worst, "sw x")}</div>
   <h3>Clothing neutrals</h3><div class="grid">${sw(t.neutrals)}</div>
-  <h3>Makeup</h3><p class="lbl">Lips</p><div class="grid">${sw(m.lip)}</div><p class="lbl">Blush</p><div class="grid">${sw(m.blush)}</div><p class="lbl">Eyes</p><div class="grid">${sw(m.eyes)}</div>
+  <h3>Makeup</h3><p class="lbl">Lips</p><div class="grid">${sw(MAKEUP[t.id].lip)}</div><p class="lbl">Blush</p><div class="grid">${sw(MAKEUP[t.id].blush)}</div><p class="lbl">Eyes</p><div class="grid">${sw(MAKEUP[t.id].eyes)}</div><p class="lbl">Liner</p><div class="grid">${sw(MAKEUP[t.id].liner)}</div><p class="tiny">More in the Makeup tab.</p>
   <h3>Hair colors</h3><div class="grid">${sw(t.hair)}</div>
   <h3>Jewelry metals</h3><p class="metals">${t.metals.map(x => `<span>${esc(x)}</span>`).join("")}</p>
   <div class="tipbox">💡 ${esc(t.tip)}</div>
   ${(() => { const src = S.view === "scan" && S.expert ? S.expert : S.result; return `<p class="tiny">${src === S.expert ? "Expert scan" : "Your picks"} · ${new Date(S.result.date).toLocaleDateString()} · ${src.label} confidence (${src.conf}%)</p>`; })()}
   <div class="row"><button class="btn ghost" data-act="retake">Retake analysis</button><a class="btn ghost" id="fb" href="${store.FEEDBACK_URL.startsWith("PASTE") ? "#" : store.FEEDBACK_URL}" target="_blank" rel="noopener">💌 Send feedback</a></div></section>`; },
 };
+const viewSwitch = () => S.result && S.expert && S.expert.type !== S.result.type ? `<div class="seg"><button class="${S.view !== "scan" ? "on" : ""}" data-act="view" data-v="picks">Your picks</button><button class="${S.view === "scan" ? "on" : ""}" data-act="view" data-v="scan">Expert scan</button></div>` : "";
+const mkRow = (title, items, first) => `<div class="h-block"><p class="h-label">${title}${first ? ' <span class="start">start here</span>' : ""}</p><div class="mk-row">${items.map(([n, h]) => `<div class="mk"><i style="--c:${h}"></i><span>${esc(n)}</span></div>`).join("")}</div></div>`;
+const makeupTab = () => {
+  if (!S.result) return `<section class="screen home"><div class="h-block"><p class="h-label">Makeup</p><p class="h-text">Your lip, blush, eye and liner shades will appear here once you know your personal color.</p></div><button class="link h-start" data-act="start">Take the analysis →</button></section>`;
+  const t = byId[(S.view === "scan" && S.expert ? S.expert : S.result).type], M = MAKEUP[t.id], P = store.load().mk || {};
+  const bold = P.look === "bold", ord = a => bold ? [...a].reverse() : a; // lists run soft → bold
+  const tone = S.expert && byId[S.expert.type].tone !== byId[S.result.type].tone ? "Neutral" : t.tone;
+  const secs = { lip: ["Lips", ord(M.lip)], blush: ["Blush", ord(M.blush)], eyes: ["Eyeshadow", ord(M.eyes)], liner: ["Liner", ord(M.liner)] };
+  const order = bold ? ["lip", "liner", "eyes", "blush"] : ["blush", "lip", "eyes", "liner"];
+  const opt = (k, v, label) => `<button class="${P[k] === v ? "on" : ""}" data-act="mkpref" data-k="${k}" data-v="${v}">${label}</button>`;
+  return `<section class="screen home mkup">${viewSwitch()}
+  <div class="h-block"><p class="h-label">Makeup for</p><p class="h-name">${t.season} ${t.tone} ${t.sub} <span class="ko" lang="ko">${t.ko}</span></p></div>
+  <div class="h-block mk-quiz"><p class="h-label">Tailor it <span class="fine">(optional)</span></p>
+    <div class="seg sm">${opt("finish", "matte", "Matte")}${opt("finish", "satin", "Satin")}${opt("finish", "dewy", "Dewy")}</div>
+    <div class="seg sm">${opt("look", "everyday", "Everyday")}${opt("look", "bold", "Bold")}</div>
+    ${P.finish ? `<p class="h-text">${esc(finishTip(P.finish, t))}</p>` : ""}</div>
+  ${order.map((k, i) => mkRow(secs[k][0], secs[k][1], i === 0 && P.look)).join("")}
+  <div class="h-block"><p class="h-label">Foundation undertone</p><p class="h-text">${esc(FOUNDATION[tone])}</p><p class="h-text">${esc(SHADE_TEST)}</p></div>
+  ${mkRow("Skip these", M.avoid)}
+  <div class="h-block h-soon"><p class="h-label">Product picks</p><p class="h-fine">Coming soon</p></div></section>`; };
 const homeTab = () => { const t = S.result && byId[S.result.type], c = colorOfDay(t), today = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
   return `<section class="screen home">
   <p class="h-date">${esc(today)}</p>
@@ -143,6 +165,7 @@ document.addEventListener("click", e => {
     toCamera: () => go("camera"),
     signin: () => { document.getElementById("signinNote").hidden = false; }, // milestone 2: Firebase Google sign-in
     view: () => { S.view = b.dataset.v; render(); },
+    mkpref: () => { const st = store.load(), mk = st.mk || {}; mk[b.dataset.k] = mk[b.dataset.k] === b.dataset.v ? undefined : b.dataset.v; store.save({ ...st, mk }); render(); },
     retake: () => go("quiz", { qi: 0, photo: null, drape: null }),
   };
   A[b.dataset.act]?.();

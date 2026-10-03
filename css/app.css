@@ -91,3 +91,10 @@ background:linear-gradient(165deg,var(--c1) 0%,var(--c2) 100%);box-shadow:0 20px
 .aiform label{font-weight:700;font-size:.8rem;margin-top:4px}.aiform input,.aiform select{font:inherit;padding:9px 12px;border:1.5px solid var(--line);border-radius:12px;background:#fff}
 .aiform .aion{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.warnbox{background:#FFF7EC;border-radius:14px;padding:10px 12px;font-size:.8rem;color:#6b5a48}
 .toast{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);background:#3A3340;color:#fff;padding:10px 16px;border-radius:999px;font-size:.88rem;font-weight:700;z-index:20;box-shadow:0 8px 24px #0003}
+
+.tabs{gap:2px;padding-left:4px;padding-right:4px}.tabs button{min-width:0;font-size:.7rem;padding:6px 2px}.tabs button span{font-size:1.2rem}
+.mkup{gap:36px}.h-name .ko{font-family:"Gothic A1","Apple SD Gothic Neo",sans-serif;font-size:.85rem;font-weight:700;color:var(--muted);margin-left:4px}
+.mk-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.mk{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;font-size:.75rem;font-weight:700;color:var(--ink)}
+.mk i{width:52px;height:52px;border-radius:50%;background:var(--c);box-shadow:0 6px 16px #3a334012}
+.start{font-size:.62rem;letter-spacing:.06em;color:var(--accent);background:#F6F2FC;padding:2px 8px;border-radius:99px;margin-left:6px}
+.mk-quiz .seg{align-self:flex-start}.seg.sm button{padding:6px 14px;font-size:.8rem}

@@ -7,6 +7,7 @@
 import { TYPES, byId, nameOf } from "./palettes.js";
 import { rgbToLab } from "./color.js";
 import { KBEAUTY_TIPS, tipOfDay, colorOfDay } from "./daily.js";
+import { MAKEUP, FOUNDATION, SHADE_TEST } from "./makeup.js";
 
 const AIKEY = "glowtone.ai";
 export const AI_PRESETS = {
@@ -32,7 +33,7 @@ function ctxLines(c) {
     `My Glowtone result (from my quiz + drape picks): ${nameOf(t)} (${t.ko}), ${c.r.label.toLowerCase()} confidence. Traits: ${t.traits}.`,
     `Best colors: ${t.best.map(b => b[0]).join(", ")}.`, `Colors to avoid near my face: ${t.worst.map(b => b[0]).join(", ")}.`,
     `Clothing neutrals: ${t.neutrals.map(b => b[0]).join(", ")}. Metals: ${t.metals.join(", ")}.`,
-    `Makeup: lips ${m.lip.map(b => b[0]).join(", ")}; blush ${m.blush.map(b => b[0]).join(", ")}; eyes ${m.eyes.map(b => b[0]).join(", ")}. Hair colors: ${t.hair.map(b => b[0]).join(", ")}.`];
+    `Makeup: lips ${MAKEUP[t.id].lip.map(b => b[0]).join(", ")}; blush ${MAKEUP[t.id].blush.map(b => b[0]).join(", ")}; eyeshadow ${MAKEUP[t.id].eyes.map(b => b[0]).join(", ")}; liner ${MAKEUP[t.id].liner.map(b => b[0]).join(", ")}. Hair colors: ${t.hair.map(b => b[0]).join(", ")}.`];
   if (c.x) o.push(`Glowtone's on-device Expert scan of my photo says: ${nameOf(c.x)} (${c.e.label.toLowerCase()} confidence). Reasons: ${c.e.reasons.join("; ")}.`);
   return o;
 }
@@ -80,12 +81,14 @@ export function offlineAnswer(c, q) {
     return { html: `Your picks say ${nameOf(t)}, and the scan says ${nameOf(c.x)} (${esc(c.e.reasons[0].toLowerCase())}). ${c.x.tone === t.tone ? "You're " + t.tone.toLowerCase() + " either way, so try colors from both palettes." : "They disagree on warm vs cool, so retake the photo by a window with white paper."}` };
   }
   if (has(/\b(metal|jewel|gold|silver|platinum|earring|necklace|ring)\b/)) return { html: `Your best metals are ${list(t.metals.map(m => [m]), 3)}. ${t.tone === "Warm" ? "Warm metals echo your golden undertone." : "Cool metals match your cool undertone."}` };
-  if (has(/\b(lip|lipstick|tint|blush|cheek|eyeshadow|eye shadow|makeup|make-up|liner)/)) {
-    const m = t.makeup;
-    if (has(/\blip|lipstick|tint/)) return { html: `Try ${list(m.lip, 3)} for lips. They suit your ${t.tone.toLowerCase()} ${t.season} coloring.` };
-    if (has(/blush|cheek/)) return { html: `For blush, go with ${list(m.blush, 2)}.` };
-    if (has(/eye/)) return { html: `For eyes, try ${list(m.eyes, 3)}.` };
-    return { html: `Lips: ${list(m.lip, 2)}. Blush: ${list(m.blush, 2)}. Eyes: ${list(m.eyes, 2)}.` };
+  if (has(/\b(lip|lipstick|tint|gloss|blush|cheek|eyeshadow|eye shadow|shadow|makeup|make-up|liner|eyeliner|foundation|cushion|concealer|shade match)/)) {
+    const M = MAKEUP[t.id], tone = c.x && c.x.tone !== t.tone ? "Neutral" : t.tone;
+    if (has(/foundation|cushion|concealer|shade match/)) return { html: `${esc(FOUNDATION[tone])}`, more: esc(SHADE_TEST) };
+    if (has(/liner/)) return { html: `For liner, try ${list(M.liner, 2)}.` };
+    if (has(/\blip|lipstick|tint|gloss/)) return { html: `Try ${list(M.lip, 4)} for lips. They suit your ${t.tone.toLowerCase()} ${t.season} coloring.` };
+    if (has(/blush|cheek/)) return { html: `For blush, go with ${list(M.blush, 3)}.` };
+    if (has(/eye|shadow/)) return { html: `For eyeshadow, try ${list(M.eyes, 4)}.` };
+    return { html: `Lips: ${list(M.lip, 2)}. Blush: ${list(M.blush, 2)}. Eyes: ${list(M.eyes, 2)}. See the Makeup tab for more.` };
   }
   if (has(/\b(hair|dye|highlight|balayage)/)) return { html: `If you dye your hair, ${list(t.hair, 3)} are your most flattering shades.` };
   if (has(/\b(avoid|worst|bad|unflattering|not wear|don'?t wear|shouldn'?t)/)) return { html: `Keep ${list(t.worst, 3)} away from your face. If you love them, wear them on the bottom half.` };
