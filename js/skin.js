@@ -69,7 +69,7 @@ export function skQuizView(st) {
   const s = SK_STEPS[st.i], a = st.ans[s.id], sel = v => s.multi ? (a || []).includes(v) : a === v, last = st.i === SK_STEPS.length - 1;
   return `<section class="screen home st">
   <div class="bar"><i style="width:${(st.i / SK_STEPS.length) * 100}%"></i></div>
-  <div class="h-block"><p class="h-label">🫧 Skin quiz · ${st.i + 1} of ${SK_STEPS.length}</p><p class="h-name">${esc(s.q)}</p>${s.hint ? `<p class="h-text">${esc(s.hint)}</p>` : ""}</div>
+  <div class="h-block"><p class="h-label">Skin quiz · ${st.i + 1} of ${SK_STEPS.length}</p><p class="h-name">${esc(s.q)}</p>${s.hint ? `<p class="h-text">${esc(s.hint)}</p>` : ""}</div>
   <div class="st-opts">${s.opts.map(([v, n]) => `<button class="st-opt${sel(v) ? " on" : ""}" data-act="skAns" data-v="${v}">${esc(n)}</button>`).join("")}</div>
   <div class="st-nav">${st.i ? `<button class="link" data-act="skBack">← Back</button>` : "<span></span>"}${s.multi ? `<button class="btn sm" data-act="skNext">${last ? "See my routine" : (a || []).length ? "Next" : "Skip"}</button>` : ""}</div>
   <p class="h-fine">${esc(SAFE)}</p></section>`;
@@ -82,11 +82,11 @@ const stepCard = (s, i) => `<div class="card sk-step"><div class="sk-head"><span
 export function skResultsView(r) {
   const [tn, td] = TYPE_INFO[r.type], steps = routine(r), am = steps.filter(s => s.when !== "PM"), pm = steps.filter(s => s.when !== "AM");
   return `<section class="screen home st sk">
-  <div class="h-block"><p class="h-label">🫧 Your skin</p><p class="h-name">${tn} skin</p><p class="h-text">${esc(td)}</p>
+  <div class="h-block"><p class="h-label">Your skin</p><p class="h-name">${tn} skin</p><p class="h-text">${esc(td)}</p>
   ${r.flags.length ? `<div class="sk-flags">${r.flags.map(f => `<div class="sk-flag"><b>${FLAG_INFO[f][0]}</b><span>${esc(FLAG_INFO[f][1])}</span></div>`).join("")}</div>` : ""}</div>
-  <div class="sk-safe">⚕️ ${esc(SAFE)}</div>
-  <div class="h-block"><p class="h-label">☀️ Morning routine</p><p class="h-text">${am.map(s => s.n).join(" → ")}</p></div>
-  <div class="h-block"><p class="h-label">🌙 Night routine</p><p class="h-text">${pm.map(s => s.n).join(" → ")}</p></div>
+  <div class="sk-safe">${esc(SAFE)}</div>
+  <div class="h-block"><p class="h-label">Morning</p><p class="h-text">${am.map(s => s.n).join(" → ")}</p></div>
+  <div class="h-block"><p class="h-label">Night</p><p class="h-text">${pm.map(s => s.n).join(" → ")}</p></div>
   <div class="h-block"><p class="h-label">Step by step</p>${steps.map(stepCard).join("")}</div>
   <div class="card"><p class="h-label">Patch-test first</p>${list(PATCH)}</div>
   <div class="h-block h-soon"><p class="h-label">Product picks</p><p class="h-fine">Coming soon</p></div>

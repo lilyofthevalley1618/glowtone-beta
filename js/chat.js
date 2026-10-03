@@ -90,7 +90,7 @@ export function offlineAnswer(c, q) {
       if (has(/routine|order|steps?|morning|night|\bam\b|\bpm\b|skin ?care|what should i use|my skin/)) {
         const am = steps.filter(x => x.when !== "PM").map(x => x.n.toLowerCase()), pm = steps.filter(x => x.when !== "AM").map(x => x.n.toLowerCase());
         return { html: `For your ${tn} skin${R.flags.length ? ` (${esc(R.flags.map(f => FLAG_INFO[f][0].toLowerCase()).join(", "))})` : ""}: AM is ${esc(am.join(" → "))}. PM is ${esc(pm.join(" → "))}. Add one new product at a time and patch-test first.${fine}` }; }
-    } else if (has(/routine|my skin|skin type|what should i use/)) return { html: "Take the Skin quiz in the 🫧 Skin tab (12 quick questions) and I can suggest an AM and PM routine for your skin type." };
+    } else if (has(/routine|my skin|skin type|what should i use/)) return { html: "Take the Skin quiz in the Skin tab (12 quick questions) and I can suggest an AM and PM routine for your skin type." };
     if (has(/\b(acne|pimple)/)) return { html: "For acne, keep it gentle: low-pH cleanser, non-comedogenic moisturizer, daily sunscreen, and no picking. For painful or persistent acne, a dermatologist is the best person to ask." };
     const words = s.split(/\W+/).filter(w => w.length > 3), hit = KBEAUTY_TIPS.find(k => words.some(w => k.toLowerCase().includes(w)));
     return { html: `${esc(hit || tipOfDay())} <span class="fine">General tip, not medical advice.</span>`, more: hit ? null : KBEAUTY_TIPS.slice(0, 5).map(esc).join("<br>• ") };
@@ -186,7 +186,7 @@ export function mountChat(S, rerender) {
       if (m.who === "bot" && m.more) { d.insertAdjacentHTML("beforeend", `<div><button class="morechip">Want more detail?</button></div>`); d.querySelector(".morechip").onclick = () => { const mo = m.more; m.more = null; CHAT.msgs.push({ who: "me", html: "Want more detail?" }, { who: "bot", html: mo, q: m.q, copy: true }); paint(); }; }
       if (m.who === "bot" && m.copy) {
         const pr = copyPrompt(c, m.q);
-        d.insertAdjacentHTML("beforeend", `<div class="copyrow"><button class="copybtn">📋 Copy for any AI</button><p class="fine">Paste it into free ChatGPT or Grok for a longer answer. It includes your question and your results (never your photo).</p><details><summary>See what gets copied</summary><pre>${esc(pr)}</pre></details></div>`);
+        d.insertAdjacentHTML("beforeend", `<div class="copyrow"><button class="copybtn">Copy for any AI</button><p class="fine">Paste it into free ChatGPT or Grok for a longer answer. It includes your question and your results (never your photo).</p><details><summary>See what gets copied</summary><pre>${esc(pr)}</pre></details></div>`);
         d.querySelector(".copybtn").onclick = async () => { const ok = await copyText(pr); toast(ok ? "Copied! Paste it into ChatGPT or Grok." : "Couldn't copy. Open \"See what gets copied\" and copy it by hand."); };
       }
       box.appendChild(d);

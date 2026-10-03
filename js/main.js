@@ -49,8 +49,8 @@ camera: () => `<section class="screen">
   <li>🙂 Bare face if you can, hair pulled back, filters/beauty mode off.</li></ul>
   <div class="cam"><video id="vid" playsinline muted autoplay></video><div class="oval"></div><div class="paper-box">paper here</div>
   <p id="camMsg" class="cam-msg">Starting camera…</p></div>
-  <div class="row"><button class="btn" data-act="snap" id="snapBtn" disabled>📸 Take photo</button>
-  <label class="btn ghost">🖼 Choose photo<input type="file" accept="image/*" id="file" hidden></label></div>
+  <div class="row"><button class="btn" data-act="snap" id="snapBtn" disabled>Take photo</button>
+  <label class="btn ghost">Choose photo<input type="file" accept="image/*" id="file" hidden></label></div>
   <p class="tiny center">Processed on your device only. Nothing is uploaded.</p>
   <button class="link" data-act="skipPhoto">Skip, use my quiz only →</button></section>`,
 
@@ -67,9 +67,9 @@ result: () => { const r = S.result, x = S.expert;
   <div class="duo">
     ${panel("Your picks", "From your quiz + drape choices", r.type, r.label, r.conf, r.why.filter(w => !/^Photo/.test(w)), r.runnerUp)}
     ${x ? panel("What the scan says looks best", "Expert scan of your photo: skin, hair & eye color science", x.type, x.label, x.conf, x.reasons, x.runnerUp)
-        : `<div class="panel empty"><p class="pk">What the scan says looks best</p><p class="muted">No photo yet. Take the daylight photo step to get an independent Expert scan.</p><button class="btn ghost sm" data-act="toCamera">📸 Add a photo scan</button></div>`}
+        : `<div class="panel empty"><p class="pk">What the scan says looks best</p><p class="muted">No photo yet. Take the daylight photo step to get an independent Expert scan.</p><button class="btn ghost sm" data-act="toCamera">Add a photo scan</button></div>`}
   </div>
-  <button class="btn signin" data-act="signin">🔐 Sign in to save your results</button>
+  <button class="btn signin" data-act="signin">Sign in to save your results</button>
   <p id="signinNote" class="note" hidden>Google sign-in is coming soon. Your results are saved on this device for now. 💛</p>
   <button class="btn" data-act="toProfile">See my palettes →</button>
   <button class="link" data-act="retake">Retake</button></section>`; },
@@ -85,14 +85,13 @@ home: () => {
   const m = t.makeup;
   const sw2 = viewSwitch();
   return `<section class="screen">${sw2}${card(t)}
-  <p class="traits">${esc(t.traits)}</p><p>${esc(t.desc)}</p>
-  <h3>Best colors</h3><div class="grid">${sw(t.best)}</div>
-  <h3>Colors to avoid near your face</h3><div class="grid">${sw(t.worst, "sw x")}</div>
-  <h3>Clothing neutrals</h3><div class="grid">${sw(t.neutrals)}</div>
-  <h3>Makeup</h3><p class="lbl">Lips</p><div class="grid">${sw(MAKEUP[t.id].lip)}</div><p class="lbl">Blush</p><div class="grid">${sw(MAKEUP[t.id].blush)}</div><p class="lbl">Eyes</p><div class="grid">${sw(MAKEUP[t.id].eyes)}</div><p class="lbl">Liner</p><div class="grid">${sw(MAKEUP[t.id].liner)}</div><p class="tiny">More in the Makeup tab.</p>
-  <h3>Hair colors</h3><div class="grid">${sw(t.hair)}</div>
-  <h3>Jewelry metals</h3><p class="metals">${t.metals.map(x => `<span>${esc(x)}</span>`).join("")}</p>
-  <div class="tipbox">💡 ${esc(t.tip)}</div>
+  <div class="cg-card"><p class="traits">${esc(t.traits)}</p><p class="h-text">${esc(t.desc)}</p></div>
+  <div class="cg-card"><p class="h-label">Best colors</p><div class="grid">${sw(t.best)}</div></div>
+  <div class="cg-card"><p class="h-label">Clothing neutrals</p><div class="grid">${sw(t.neutrals)}</div></div>
+  <div class="cg-card"><p class="h-label">Avoid near your face</p><div class="grid">${sw(t.worst, "sw x")}</div></div>
+  <div class="cg-card"><p class="h-label">Hair colors</p><div class="grid">${sw(t.hair)}</div><p class="h-label">Jewelry metals</p><p class="metals">${t.metals.map(x => `<span>${esc(x)}</span>`).join("")}</p></div>
+  <button class="link h-start" data-tab="makeup">See your makeup shades →</button>
+  <div class="tipbox">${esc(t.tip)}</div>
   ${(() => { const src = S.view === "scan" && S.expert ? S.expert : S.result; return `<p class="tiny">${src === S.expert ? "Expert scan" : "Your picks"} · ${new Date(S.result.date).toLocaleDateString()} · ${src.label} confidence (${src.conf}%)</p>`; })()}
   <div class="row"><button class="btn ghost" data-act="retake">Retake analysis</button></div></section>`; },
 };
@@ -133,7 +132,7 @@ const lockView = tab => { const P = store.PREMIUM, name = tab === "style" ? "Sty
   return `<section class="screen home lock"><div class="lock-blur" aria-hidden="true">${peek}</div>
   <div class="h-block lock-card"><p class="h-label">Glowtone Premium</p><p class="h-name">Unlock ${name}</p>
   <p class="h-text">${tab === "style" ? "Flattering shapes, cuts and necklines in your season palette." : "Lip, blush, eyeshadow and liner shades for your type, plus foundation tips."}</p>
-  <p class="lock-price"><b>${P.price}</b> ${P.note} · Style + Makeup</p><p class="h-fine">✨ ${P.launchOffer}</p>
+  <p class="lock-price"><b>${P.price}</b> ${P.note} · Style + Makeup</p><p class="h-fine">${P.launchOffer}</p>
   <button class="btn" data-act="unlock">Unlock (coming soon)</button><button class="link" data-act="lockLater">Maybe later</button></div></section>`; };
 const styleTab = () => {
   const st = S.style || (S.style = { i: 0, ans: {}, quiz: false });
@@ -146,16 +145,18 @@ const styleTab = () => {
 const skinTab = () => { const sk = S.skin || (S.skin = { i: 0, ans: {}, quiz: false }), saved = store.load().skin;
   if (sk.quiz) return skQuizView(sk);
   if (saved) return skResultsView(skinResult(saved));
-  return `<section class="screen home"><div class="h-block"><p class="h-label">🫧 Skin</p><p class="h-name">Find your K-beauty routine</p><p class="h-text">12 quick questions about how your skin feels. You'll get your skin type, any concerns to keep in mind, and a morning and night routine by step. Free, and everything stays on your phone.</p></div><button class="btn" data-act="skStart" style="align-self:flex-start">Start skin quiz</button><p class="h-fine">Not medical advice. See a dermatologist for serious, painful or persistent concerns.</p></section>`; };
+  return `<section class="screen home"><div class="h-block"><p class="h-label">Skin</p><p class="h-name">Find your K-beauty routine</p><p class="h-text">12 quick questions about how your skin feels. You'll get your skin type, any concerns to keep in mind, and a morning and night routine by step. Free, and everything stays on your phone.</p></div><button class="btn" data-act="skStart" style="align-self:flex-start">Start skin quiz</button><p class="h-fine">Not medical advice. See a dermatologist for serious, painful or persistent concerns.</p></section>`; };
 export const DRESS = `<svg class="ic-dress" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 2.5 10 6.4 8.1 9.6 4.6 20.6c-.2.6.3 1.1.9 1.1h13c.6 0 1.1-.5.9-1.1L15.9 9.6 14 6.4l.8-3.9h-1.3L12 5.7l-1.5-3.2z" fill="#B9D3A6" stroke="#8FB07A" stroke-width=".9" stroke-linejoin="round"/><path d="M8.3 9.8c2.4.9 5 .9 7.4 0" fill="none" stroke="#8FB07A" stroke-width=".9" stroke-linecap="round"/></svg>`;
 const ICONS = { home: "🏠", profile: "🎨", makeup: "💋", style: DRESS, skin: "🫧", chat: "💌" };
 const greetWord = (h = new Date().getHours()) => h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+const cap1 = w => w[0].toUpperCase() + w.slice(1);
+const aN = w => (/^[aeiou]/i.test(w) ? "an " : "a ") + w;
 function styleIdea(t, saved, i) {
   if (!t) return null;
   const b = t.best, n = t.neutrals, top = b[i % b.length], bottom = n[(i + 1) % n.length], acc = b[(i + 3) % b.length];
   if (saved) { const r = styleResult(saved, t), cut = r.cuts[i % r.cuts.length], shape = r.shapes[i % r.shapes.length], neck = r.necks[i % r.necks.length];
     return { colors: [top, bottom, acc], text: `${shape}, with ${/^[aeiou]/i.test(neck) ? "an" : "a"} ${neck.toLowerCase()} top in ${top[0].toLowerCase()}, ${bottom[0].toLowerCase()} on the bottom and a pop of ${acc[0].toLowerCase()}. Try: ${cut.toLowerCase()}.`, nudge: false }; }
-  const ideas = [`A ${top[0].toLowerCase()} knit with ${bottom[0].toLowerCase()} straight-leg pants`, `A ${bottom[0].toLowerCase()} jacket over a ${top[0].toLowerCase()} tee`, `A ${top[0].toLowerCase()} shirt, ${bottom[0].toLowerCase()} bottoms and a ${acc[0].toLowerCase()} accessory`];
+  const ideas = [`${cap1(aN(top[0].toLowerCase()))} knit with ${bottom[0].toLowerCase()} straight-leg pants`, `${cap1(aN(bottom[0].toLowerCase()))} jacket over ${aN(top[0].toLowerCase())} tee`, `${cap1(aN(top[0].toLowerCase()))} shirt, ${bottom[0].toLowerCase()} bottoms and ${aN(acc[0].toLowerCase())} accessory`];
   return { colors: [top, bottom, acc], text: ideas[i % ideas.length] + ".", nudge: true };
 }
 const homeTab = () => { const st = store.load(), t = S.result && byId[(S.view === "scan" && S.expert ? S.expert : S.result).type], c = colorOfDay(t), i = dayIndex();
@@ -185,7 +186,7 @@ const panel = (title, sub, id, label, conf, why, ru) => { const t = byId[id];
 function agreeNote(r, x) {
   if (!x) return `<div class="note">Add the photo step for a second opinion from the Expert scan.</div>`;
   const a = byId[r.type], b = byId[x.type];
-  if (a.id === b.id) return `<div class="note ok">💛 Both agree: you're <b>${nameOf(a)}</b>.</div>`;
+  if (a.id === b.id) return `<div class="note ok">Both agree: you're <b>${nameOf(a)}</b>.</div>`;
   if (a.season === b.season) return `<div class="note">Same season (${a.season}), different sub-tone. Both palettes will work; try colors from each.</div>`;
   if (a.tone === b.tone) return `<div class="note">Both say <b>${a.tone.toLowerCase()}</b>, but different seasons. Compare the two palettes in a mirror by a window.</div>`;
   return `<div class="note warnbg">Your picks and the scan disagree on warm vs cool. Retake the photo by a window with white paper; the scan can be thrown off by lighting.</div>`;
@@ -319,7 +320,7 @@ async function startAnalyze(src) {
     document.getElementById("reading").innerHTML = P.ok ? `<div class="readcard">
       <div><b>Undertone</b><span>${lean(P.axes.t, "Warm", "Cool")}</span></div><div><b>Value</b><span>${lean(P.axes.v, "Light", "Deep")}</span></div><div><b>Chroma</b><span>${lean(P.axes.c, "Clear", "Muted")}</span></div>
       <div class="skinchip"><i style="--c:${labHex(P.skin)}"></i>Your skin (corrected)</div></div>
-      ${P.warnings.length ? `<ul class="warn">${P.warnings.map(w => `<li>⚠️ ${esc(w)}</li>`).join("")}</ul>` : `<p class="ok">✅ Good lighting. This reading looks reliable.</p>`}` : "";
+      ${P.warnings.length ? `<ul class="warn">${P.warnings.map(w => `<li>${esc(w)}</li>`).join("")}</ul>` : `<p class="ok">Good lighting. This reading looks reliable.</p>`}` : "";
     ctx.putImageData(clean, 0, 0); drapes(cy);
   }
   function drapes(cy) {
