@@ -111,3 +111,9 @@ background:linear-gradient(165deg,var(--c1) 0%,var(--c2) 100%);box-shadow:0 20px
 .st-chips{display:flex;flex-wrap:wrap;gap:10px}.st-chips span{display:flex;align-items:center;gap:6px;font-size:.82rem;font-weight:700}.st-chips i{width:22px;height:22px;border-radius:50%;background:var(--c)}
 .lock{position:relative;gap:0}.lock-blur{filter:blur(6px);opacity:.55;padding:20px 0}.lock-peek{display:flex;gap:16px;justify-content:center}.lock-peek .body{width:70px}
 .lock-card{background:#fff;border-radius:24px;padding:24px;margin-top:-40px;position:relative;box-shadow:0 16px 40px #3a334012;align-items:flex-start}.lock-price{font-size:1rem}.lock-price b{font-size:1.4rem}
+
+/* Top tab bar (sticky under the safe area); replaces the old bottom bar */
+.tabs{position:sticky;top:0;bottom:auto;z-index:10;padding:calc(6px + env(safe-area-inset-top)) 4px 6px;border-top:0;border-bottom:1.5px solid var(--line)}
+#app{padding-bottom:32px}
+.composer{bottom:0;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+.toast{bottom:90px}
