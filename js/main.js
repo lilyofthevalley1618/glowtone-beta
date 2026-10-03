@@ -62,6 +62,8 @@ result: () => { const r = S.result, x = S.expert;
     ${x ? panel("What the scan says looks best", "Expert scan of your photo: skin, hair & eye color science", x.type, x.label, x.conf, x.reasons, x.runnerUp)
         : `<div class="panel empty"><p class="pk">What the scan says looks best</p><p class="muted">No photo yet. Take the daylight photo step to get an independent Expert scan.</p><button class="btn ghost sm" data-act="toCamera">📸 Add a photo scan</button></div>`}
   </div>
+  <button class="btn signin" data-act="signin">🔐 Sign in to save your results</button>
+  <p id="signinNote" class="note" hidden>Google sign-in is coming soon. Your results are saved on this device for now. 💛</p>
   <button class="btn" data-act="toProfile">See my palettes →</button>
   <button class="link" data-act="retake">Retake</button></section>`; },
 home: () => {
@@ -136,6 +138,7 @@ document.addEventListener("click", e => {
     snap: () => { const v = document.getElementById("vid"); const c = document.createElement("canvas"); fit(c, v.videoWidth, v.videoHeight); c.getContext("2d").drawImage(v, 0, 0, c.width, c.height); startAnalyze(c); },
     toProfile: () => go("home", { tab: "profile", view: "picks" }),
     toCamera: () => go("camera"),
+    signin: () => { document.getElementById("signinNote").hidden = false; }, // milestone 2: Firebase Google sign-in
     view: () => { S.view = b.dataset.v; render(); },
     retake: () => go("quiz", { qi: 0, photo: null, drape: null }),
   };

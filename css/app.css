@@ -70,3 +70,4 @@ background:linear-gradient(165deg,var(--c1) 0%,var(--c2) 100%);box-shadow:0 20px
 .seg button{font:inherit;font-weight:800;font-size:.85rem;border:0;background:none;padding:8px 14px;border-radius:999px;color:var(--muted);cursor:pointer}.seg button.on{background:#F3EEFB;color:var(--accent)}
 .hi{margin-top:6px}.homecard{background:#fff;border:1.5px solid var(--line);border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
 .homecard .mini{width:100%;justify-content:center}.soon-card{background:linear-gradient(135deg,#F3EEFB,#EAF4E4);border-radius:22px;padding:18px}
+.btn.signin{background:#fff;color:var(--ink);border:2px solid var(--lav);box-shadow:0 6px 18px #C7B7E355}.note[hidden]{display:none}
