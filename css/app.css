@@ -243,6 +243,7 @@ h1,h2,.h-name{letter-spacing:-.015em}h3{font-weight:700}
 .tabs button.on{box-shadow:inset 0 0 0 1px #E4D8CB}
 .fs-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 8px}
 .fs-face{font:inherit;background:#FBF8F3;border:1.5px solid transparent;border-radius:20px;padding:10px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:var(--ink)}
-.fs-face svg{width:100%;max-width:130px;height:auto;display:block}.fs-face span{font-size:.84rem;font-weight:700}
+.fs-face svg{width:100%;max-width:150px;height:auto;display:block}.fs-face span{font-size:.86rem;font-weight:600;font-style:italic;letter-spacing:.01em}
 .fs-face.on{background:#fff;border-color:#D8CABB}.fs-face:focus-visible,.fm-key:focus-visible{outline:2px solid #8A7466;outline-offset:2px}
-.fs-line{fill:none;stroke:#A89584;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.fs-lash{stroke-width:1.4}
+.fs-line{fill:none;stroke:#9C8F86;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}.fs-thin{stroke-width:.9}.fs-brow{stroke-width:2;stroke:#A39489}
+.fs-face{background:#fff;box-shadow:inset 0 0 0 1px #EFE7DD}
