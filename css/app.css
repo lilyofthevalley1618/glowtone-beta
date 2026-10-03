@@ -131,3 +131,10 @@ background:linear-gradient(165deg,var(--c1) 0%,var(--c2) 100%);box-shadow:0 20px
 .qs-done{position:absolute;top:8px;right:10px;width:20px;height:20px;border-radius:50%;background:#B9D3A6;color:#fff;font-size:.72rem;font-weight:800;display:grid;place-items:center}
 .sample{font:inherit;font-weight:700;text-align:left;background:#F6F2FC;color:var(--accent);border:0;border-radius:16px;padding:12px 14px;cursor:pointer}
 .home2 .h-soon{opacity:.7}
+/* Skin tab */
+.sk-flags{display:flex;flex-direction:column;gap:8px}.sk-flag{background:#fff;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;box-shadow:0 4px 14px #3a33400a}.sk-flag b{font-size:.95rem}.sk-flag span{font-size:.85rem;color:var(--muted)}
+.sk-safe{background:#F3F7EF;border-radius:16px;padding:12px 14px;font-size:.85rem;line-height:1.5;color:#55604B}
+.sk-step{gap:10px}.sk-head{display:flex;align-items:center;gap:10px}.sk-n{width:26px;height:26px;border-radius:50%;background:#EEE8F7;color:var(--accent);font-weight:800;font-size:.8rem;display:grid;place-items:center}
+.sk-head b{flex:1;font-size:1.05rem}.sk-when{font-size:.72rem;font-weight:800;color:#9A8FA6;background:#F6F2EC;border-radius:999px;padding:3px 9px}
+.sk-ing{display:flex;flex-direction:column;gap:10px}.sk-ing .h-label{margin-bottom:6px}.st-tags.warn span{background:#FBF1EA;color:#9A6A4E}
+.sk .st-list{margin:0}

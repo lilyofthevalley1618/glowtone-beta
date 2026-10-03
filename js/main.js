@@ -1,14 +1,15 @@
-import { QUESTIONS, scoreQuiz } from "./quiz.js?v=20261003a";
-import { analyze } from "./color.js?v=20261003a";
-import { combine } from "./classify.js?v=20261003a";
-import { TYPES, byId, nameOf, LEGACY } from "./palettes.js?v=20261003a";
-import { expertScan } from "./expert.js?v=20261003a";
-import { colorOfDay, tipOfDay, dayIndex } from "./daily.js?v=20261003a";
-import { chatView, mountChat } from "./chat.js?v=20261003a";
-import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip } from "./makeup.js?v=20261003a";
-import { STEPS as ST_STEPS, quizView, resultsView, styleResult, bodySVG } from "./style.js?v=20261003a";
-import { findFace } from "./face.js?v=20261003a";
-import * as store from "./storage.js?v=20261003a";
+import { QUESTIONS, scoreQuiz } from "./quiz.js?v=20261003b";
+import { analyze } from "./color.js?v=20261003b";
+import { combine } from "./classify.js?v=20261003b";
+import { TYPES, byId, nameOf, LEGACY } from "./palettes.js?v=20261003b";
+import { expertScan } from "./expert.js?v=20261003b";
+import { colorOfDay, tipOfDay, dayIndex } from "./daily.js?v=20261003b";
+import { chatView, mountChat } from "./chat.js?v=20261003b";
+import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip } from "./makeup.js?v=20261003b";
+import { STEPS as ST_STEPS, quizView, resultsView, styleResult, bodySVG } from "./style.js?v=20261003b";
+import { findFace } from "./face.js?v=20261003b";
+import * as store from "./storage.js?v=20261003b";
+import { SK_STEPS, skQuizView, skResultsView, skinResult } from "./skin.js?v=20261003b";
 
 const $app = document.getElementById("app"), $tabs = document.getElementById("tabs");
 const saved = store.load();
@@ -73,12 +74,12 @@ result: () => { const r = S.result, x = S.expert;
 home: () => {
   if (S.tab === "home") return homeTab();
   if (S.tab === "chat") return chatView(S);
+  if (S.tab === "skin") return skinTab(); // free, no color result needed
   if (store.isLocked(S.tab)) return lockView(S.tab);
   if (S.tab === "makeup") return makeupTab();
   const t = S.result ? byId[(S.view === "scan" && S.expert ? S.expert : S.result).type] : null;
   if (!t) return soon("Profile", "Finish an analysis to see your season, palettes and makeup colors here.") + `<div class="row"><button class="btn" data-act="start">Start analysis</button></div>`;
   if (S.tab === "style") return styleTab();
-  if (S.tab === "skin") return soon("Skin", "A Korean skincare quiz with researched K-beauty routines. Not medical advice.");
   const m = t.makeup;
   const sw2 = viewSwitch();
   return `<section class="screen">${sw2}${card(t)}
@@ -128,6 +129,10 @@ const styleTab = () => {
     return quizView(st); }
   return resultsView(styleResult(saved, t), t, saved, viewSwitch());
 };
+const skinTab = () => { const sk = S.skin || (S.skin = { i: 0, ans: {}, quiz: false }), saved = store.load().skin;
+  if (sk.quiz) return skQuizView(sk);
+  if (saved) return skResultsView(skinResult(saved));
+  return `<section class="screen home"><div class="h-block"><p class="h-label">🫧 Skin</p><p class="h-name">Find your K-beauty routine</p><p class="h-text">12 quick questions about how your skin feels. You'll get your skin type, any concerns to keep in mind, and a morning and night routine by step. Free, and everything stays on your phone.</p></div><button class="btn" data-act="skStart" style="align-self:flex-start">Start skin quiz</button><p class="h-fine">Not medical advice. See a dermatologist for serious, painful or persistent concerns.</p></section>`; };
 const ICONS = { home: "🏠", profile: "🎨", makeup: "💋", style: "👗", skin: "🫧", chat: "💌" };
 const greetWord = (h = new Date().getHours()) => h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 function styleIdea(t, saved, i) {
@@ -152,7 +157,7 @@ const homeTab = () => { const st = store.load(), t = S.result && byId[(S.view ==
     ${t ? `<p class="h-text">You're <b>${t.season} ${t.tone} ${t.sub}</b> <span lang="ko">${t.ko}</span></p>` : `<button class="link h-start" data-act="start">Start your color analysis →</button>`}</div>
   <div class="card cod"><p class="h-label">Color of the day</p><div class="h-color"><i style="--c:${c.hex}"></i><div><p class="h-name">${esc(c.name)}</p><p class="h-text">${esc(c.tip)}</p></div></div></div>
   <div class="card"><p class="h-label">K-beauty tip</p><p class="h-body">${esc(tipOfDay())}</p><p class="h-fine">General tips, not medical advice.</p></div>
-  <div><p class="h-label" style="margin-bottom:12px">Quick start</p><div class="qs-row">${qs("style", "Style", st.style ? "See your style" : "8 quick questions", !!st.style)}${qs("makeup", "Makeup", st.mkSeen ? "Your shades" : "Find your shades", !!st.mkSeen)}${qs("skin", "Skin", "", false, true)}</div></div>
+  <div><p class="h-label" style="margin-bottom:12px">Quick start</p><div class="qs-row">${qs("style", "Style", st.style ? "See your style" : "8 quick questions", !!st.style)}${qs("makeup", "Makeup", st.mkSeen ? "Your shades" : "Find your shades", !!st.mkSeen)}${qs("skin", "Skin", st.skin ? "Your routine" : "12 quick questions", !!st.skin)}</div></div>
   ${idea ? `<div class="card"><p class="h-label">Style idea of the day</p><div class="st-outfit">${idea.colors.map(([n, h]) => `<i style="--c:${h}" title="${esc(n)}"></i>`).join("")}</div><p class="h-body">${esc(idea.text)}</p>${idea.nudge ? `<button class="link h-start" data-tab="style">Take the Style quiz for ideas that fit your shape →</button>` : ""}</div>` : `<div class="card"><p class="h-label">Style idea of the day</p><p class="h-body">Find your season and you'll get a fresh outfit idea in your colors every day.</p><button class="link h-start" data-act="start">Start your color analysis →</button></div>`}
   <div class="card chatcard"><p class="h-label">${ICONS.chat} Try the Chat</p><p class="h-text">Ask anything about your colors, makeup or style.</p><button class="sample" data-act="askSample" data-q="${esc(sq)}">“${esc(sq)}”</button></div>
   <div class="h-soon"><p class="h-label">Product picks</p><p class="h-fine">Coming soon</p></div></section>`; };
@@ -203,6 +208,14 @@ document.addEventListener("click", e => {
     toCamera: () => go("camera"),
     signin: () => { document.getElementById("signinNote").hidden = false; }, // milestone 2: Firebase Google sign-in
     view: () => { S.view = b.dataset.v; render(); },
+    skStart: () => { S.skin = { i: 0, ans: {}, quiz: true }; render(); window.scrollTo(0, 0); },
+    skRetake: () => { const { date, ...prev } = store.load().skin || {}; S.skin = { i: 0, ans: prev, quiz: true }; render(); window.scrollTo(0, 0); },
+    skBack: () => { S.skin.i--; render(); },
+    skAns: () => { const sk = S.skin, s = SK_STEPS[sk.i], v = b.dataset.v;
+      if (s.multi) { const excl = ["none", "nothing"], cur = (sk.ans[s.id] || []).filter(x => excl.includes(v) ? false : !excl.includes(x));
+        sk.ans[s.id] = cur.includes(v) ? cur.filter(x => x !== v) : cur.length < s.multi ? [...cur, v] : cur; render(); }
+      else { sk.ans[s.id] = v; skNext(); } },
+    skNext: () => skNext(),
     stStart: () => { S.style = { i: 0, ans: {}, quiz: true }; render(); },
     stRetake: () => { S.style = { i: 0, ans: { ...(store.load().style || {}) }, quiz: true }; render(); },
     stBack: () => { S.style.i--; render(); },
@@ -327,6 +340,8 @@ async function startAnalyze(src) {
     show();
   }
 }
+function skNext() { const sk = S.skin; if (sk.i < SK_STEPS.length - 1) { sk.i++; render(); window.scrollTo(0, 0); return; }
+  store.save({ ...store.load(), skin: { ...sk.ans, date: new Date().toISOString() } }); S.skin = { i: 0, ans: {}, quiz: false }; render(); window.scrollTo(0, 0); }
 function stNext() { const st = S.style; if (st.i < ST_STEPS.length - 1) { st.i++; render(); window.scrollTo(0, 0); return; }
   const ans = { ...st.ans, date: new Date().toISOString() }; store.save({ ...store.load(), style: ans }); S.style = { i: 0, ans: {}, quiz: false }; render(); window.scrollTo(0, 0); }
 function setText(t, h) { document.getElementById("aTitle").textContent = t; document.getElementById("aHint").textContent = h; }

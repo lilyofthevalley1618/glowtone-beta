@@ -4,12 +4,13 @@
    Mode 2: optional bring-your-own-key, OpenAI-compatible /chat/completions
    The key lives ONLY in this browser's localStorage under 'glowtone.ai'. No Glowtone server.
    ========================================================= */
-import { TYPES, byId, nameOf } from "./palettes.js?v=20261003a";
-import { rgbToLab } from "./color.js?v=20261003a";
-import { KBEAUTY_TIPS, tipOfDay, colorOfDay } from "./daily.js?v=20261003a";
-import { MAKEUP, FOUNDATION, SHADE_TEST } from "./makeup.js?v=20261003a";
-import { styleResult } from "./style.js?v=20261003a";
-import { load } from "./storage.js?v=20261003a";
+import { TYPES, byId, nameOf } from "./palettes.js?v=20261003b";
+import { rgbToLab } from "./color.js?v=20261003b";
+import { KBEAUTY_TIPS, tipOfDay, colorOfDay } from "./daily.js?v=20261003b";
+import { MAKEUP, FOUNDATION, SHADE_TEST } from "./makeup.js?v=20261003b";
+import { styleResult } from "./style.js?v=20261003b";
+import { load } from "./storage.js?v=20261003b";
+import { skinResult, routine, TYPE_INFO, FLAG_INFO, SAFE, PATCH } from "./skin.js?v=20261003b";
 
 const AIKEY = "glowtone.ai";
 export const AI_PRESETS = {
@@ -28,7 +29,8 @@ const list = (a, n = 4) => a.slice(0, n).map(x => x[0].toLowerCase()).join(", ")
 export function chatCtx(S) {
   const t = S.result && byId[S.result.type], x = S.expert && byId[S.expert.type];
   const sa = load().style, st = t && sa ? styleResult(sa, x && S.view === "scan" ? x : t) : null;
-  return { t, x, r: S.result, e: S.expert, st, label: t ? `${nameOf(t)}${x && x.id !== t.id ? ` · scan: ${nameOf(x)}` : ""}` : "No results yet" };
+  const sk = load().skin ? skinResult(load().skin) : null;
+  return { t, x, r: S.result, e: S.expert, st, sk, label: t ? `${nameOf(t)}${x && x.id !== t.id ? ` · scan: ${nameOf(x)}` : ""}` : "No results yet" };
 }
 function ctxLines(c) {
   if (!c.t) return ["I haven't finished my Glowtone analysis yet."];
@@ -37,6 +39,7 @@ function ctxLines(c) {
     `Best colors: ${t.best.map(b => b[0]).join(", ")}.`, `Colors to avoid near my face: ${t.worst.map(b => b[0]).join(", ")}.`,
     `Clothing neutrals: ${t.neutrals.map(b => b[0]).join(", ")}. Metals: ${t.metals.join(", ")}.`,
     `Makeup: lips ${MAKEUP[t.id].lip.map(b => b[0]).join(", ")}; blush ${MAKEUP[t.id].blush.map(b => b[0]).join(", ")}; eyeshadow ${MAKEUP[t.id].eyes.map(b => b[0]).join(", ")}; liner ${MAKEUP[t.id].liner.map(b => b[0]).join(", ")}. Hair colors: ${t.hair.map(b => b[0]).join(", ")}.`];
+  if (c.sk) o.push(`My Skin quiz: ${TYPE_INFO[c.sk.type][0].toLowerCase()} skin${c.sk.flags.length ? `, concerns: ${c.sk.flags.map(f => FLAG_INFO[f][0].toLowerCase()).join(", ")}` : ""}.`);
   if (c.st) o.push(`My Style quiz results: flattering shapes: ${c.st.shapes.join("; ")}. Cuts: ${c.st.cuts.join("; ")}. Necklines: ${c.st.necks.join(", ")}. Vibe: ${c.st.vibe}.`);
   if (c.x) o.push(`Glowtone's on-device Expert scan of my photo says: ${nameOf(c.x)} (${c.e.label.toLowerCase()} confidence). Reasons: ${c.e.reasons.join("; ")}.`);
   return o;
@@ -66,11 +69,23 @@ function colorVerdict(t, word) {
   if (kind === "worst") return `${cap(word)} isn't your easiest color near the face. Keep it for pants, shoes or bags, and wear something like ${alt} up top.`;
   return `${cap(word)} isn't on your palette, so try a version that's ${t.tone === "Warm" ? "warmer (more golden)" : "cooler (more blue-based)"} and ${/Mute/.test(t.sub) ? "softer" : /Deep/.test(t.sub) ? "deeper" : /Light/.test(t.sub) ? "lighter" : "clear"}. Your closest match is ${good[0].toLowerCase()}.`;
 }
+const lc1 = x => /^[A-Z][a-z]/.test(x) ? x[0].toLowerCase() + x.slice(1) : x;
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 export function offlineAnswer(c, q) {
   const s = q.toLowerCase(), t = c.t, has = re => re.test(s);
-  if (has(/\b(tip|skincare|skin care|k-?beauty|routine|sunscreen|spf|cleans|moistur|toner|serum|mask|exfoliat|acne|pimple)/)) {
-    if (has(/\b(acne|pimple|rash|eczema|allerg|hurt|burn|itch)/)) return { html: "For skin concerns like acne, rashes or irritation, a dermatologist or doctor is the best person to ask. In general: be gentle, patch-test new products, and stop anything that stings." };
+  if (has(/\b(tip|skincare|skin ?care|k-?beauty|routine|sunscreen|spf|cleans|moistur|toner|serum|essence|mask|exfoliat|acne|pimple|breakout|patch|my skin|skin type|rash|eczema|itch|rosacea|cyst)/)) {
+    if (has(/\b(rash|eczema|psoria|rosacea|allerg|hurts?|painful|bleed|infect|swell|burns?|burning|itch|cyst|mole|medication|prescri|accutane|isotretinoin)/)) return { html: "That sounds like something a dermatologist or doctor should look at, especially if it's painful, spreading or not going away. Until then, keep things gentle and stop anything that stings." };
+    if (c.sk) { const R = c.sk, steps = routine(R), tn = TYPE_INFO[R.type][0].toLowerCase(), fine = ` <span class="fine">${esc(SAFE.split(".")[0])}.</span>`;
+      const KEYS = [[/oil cleans|double cleans|cleansing (oil|balm)|\bbalm\b|remove (makeup|sunscreen)/, 0], [/sunscreen|\bspf\b|sun ?cream|\bsun\b/, 5], [/toner/, 2], [/serum|essence|ampoule/, 3], [/moistur|\bcream\b|lotion/, 4], [/cleanser|face ?wash|wash my face|cleans/, 1]];
+      const hit = KEYS.find(([re]) => has(re)), step = hit ? steps[hit[1]] : null;
+      if (step) return { html: `${esc(step.n)} (${step.when}) for your ${tn} skin: try ${esc(step.types.slice(0, 2).map(lc1).join(" or "))}. Look for ${esc(step.look.slice(0, 3).map(lc1).join(", "))}, and be careful with ${esc(lc1(step.careful[0]))}.${fine}` };
+      if (has(/patch/)) return { html: esc(PATCH.slice(0, 2).join(" ")) };
+      if (has(/acne|pimple|breakout/)) return { html: `For breakouts${R.flags.includes("acne") ? " (your quiz flagged acne-prone)" : ""}: gentle low-pH cleanser, a BHA toner 2–3 nights a week, niacinamide or azelaic acid, a light non-comedogenic moisturizer and daily sunscreen. For painful or persistent acne, see a dermatologist.` };
+      if (has(/routine|order|steps?|morning|night|\bam\b|\bpm\b|skin ?care|what should i use|my skin/)) {
+        const am = steps.filter(x => x.when !== "PM").map(x => x.n.toLowerCase()), pm = steps.filter(x => x.when !== "AM").map(x => x.n.toLowerCase());
+        return { html: `For your ${tn} skin${R.flags.length ? ` (${esc(R.flags.map(f => FLAG_INFO[f][0].toLowerCase()).join(", "))})` : ""}: AM is ${esc(am.join(" → "))}. PM is ${esc(pm.join(" → "))}. Add one new product at a time and patch-test first.${fine}` }; }
+    } else if (has(/routine|my skin|skin type|what should i use/)) return { html: "Take the Skin quiz in the 🫧 Skin tab (12 quick questions) and I can suggest an AM and PM routine for your skin type." };
+    if (has(/\b(acne|pimple)/)) return { html: "For acne, keep it gentle: low-pH cleanser, non-comedogenic moisturizer, daily sunscreen, and no picking. For painful or persistent acne, a dermatologist is the best person to ask." };
     const words = s.split(/\W+/).filter(w => w.length > 3), hit = KBEAUTY_TIPS.find(k => words.some(w => k.toLowerCase().includes(w)));
     return { html: `${esc(hit || tipOfDay())} <span class="fine">General tip, not medical advice.</span>`, more: hit ? null : KBEAUTY_TIPS.slice(0, 5).map(esc).join("<br>• ") };
   }
