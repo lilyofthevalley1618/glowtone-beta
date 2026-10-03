@@ -8,6 +8,8 @@ import { TYPES, byId, nameOf } from "./palettes.js";
 import { rgbToLab } from "./color.js";
 import { KBEAUTY_TIPS, tipOfDay, colorOfDay } from "./daily.js";
 import { MAKEUP, FOUNDATION, SHADE_TEST } from "./makeup.js";
+import { styleResult } from "./style.js";
+import { load } from "./storage.js";
 
 const AIKEY = "glowtone.ai";
 export const AI_PRESETS = {
@@ -25,7 +27,8 @@ const list = (a, n = 4) => a.slice(0, n).map(x => x[0].toLowerCase()).join(", ")
 // ctx = { result, expert } from main.js (saved results). Returns facts used by both modes.
 export function chatCtx(S) {
   const t = S.result && byId[S.result.type], x = S.expert && byId[S.expert.type];
-  return { t, x, r: S.result, e: S.expert, label: t ? `${nameOf(t)}${x && x.id !== t.id ? ` · scan: ${nameOf(x)}` : ""}` : "No results yet" };
+  const sa = load().style, st = t && sa ? styleResult(sa, x && S.view === "scan" ? x : t) : null;
+  return { t, x, r: S.result, e: S.expert, st, label: t ? `${nameOf(t)}${x && x.id !== t.id ? ` · scan: ${nameOf(x)}` : ""}` : "No results yet" };
 }
 function ctxLines(c) {
   if (!c.t) return ["I haven't finished my Glowtone analysis yet."];
@@ -34,6 +37,7 @@ function ctxLines(c) {
     `Best colors: ${t.best.map(b => b[0]).join(", ")}.`, `Colors to avoid near my face: ${t.worst.map(b => b[0]).join(", ")}.`,
     `Clothing neutrals: ${t.neutrals.map(b => b[0]).join(", ")}. Metals: ${t.metals.join(", ")}.`,
     `Makeup: lips ${MAKEUP[t.id].lip.map(b => b[0]).join(", ")}; blush ${MAKEUP[t.id].blush.map(b => b[0]).join(", ")}; eyeshadow ${MAKEUP[t.id].eyes.map(b => b[0]).join(", ")}; liner ${MAKEUP[t.id].liner.map(b => b[0]).join(", ")}. Hair colors: ${t.hair.map(b => b[0]).join(", ")}.`];
+  if (c.st) o.push(`My Style quiz results: flattering shapes: ${c.st.shapes.join("; ")}. Cuts: ${c.st.cuts.join("; ")}. Necklines: ${c.st.necks.join(", ")}. Vibe: ${c.st.vibe}.`);
   if (c.x) o.push(`Glowtone's on-device Expert scan of my photo says: ${nameOf(c.x)} (${c.e.label.toLowerCase()} confidence). Reasons: ${c.e.reasons.join("; ")}.`);
   return o;
 }
@@ -70,7 +74,14 @@ export function offlineAnswer(c, q) {
     const words = s.split(/\W+/).filter(w => w.length > 3), hit = KBEAUTY_TIPS.find(k => words.some(w => k.toLowerCase().includes(w)));
     return { html: `${esc(hit || tipOfDay())} <span class="fine">General tip, not medical advice.</span>`, more: hit ? null : KBEAUTY_TIPS.slice(0, 5).map(esc).join("<br>• ") };
   }
-  if (has(/\b(style|outfit cut|body type|flattering cut|silhouette)/)) return { html: "Style tips are coming soon! For now, wear your best colors near your face and use your neutrals for basics." };
+  if (has(/\b(style|outfits?|body type|body shape|flattering|silhouettes?|necklines?|neck lines?|cuts?|fits?|jeans|pants|skirts?|dress(es)?|jackets?|blazers?|wear to)\b/) && !has(/colou?r|lip|blush|makeup/)) {
+    if (!c.st) return { html: "Take the Style quiz in the Style tab (8 quick questions) and I can suggest flattering shapes, cuts and necklines in your palette." };
+    const r = c.st;
+    if (has(/neck/)) return { html: `Necklines to try: ${r.necks.join(", ").toLowerCase()}.` };
+    if (has(/outfit|wear to|idea/)) return { html: `${esc(r.outfitText)}: ${esc(r.outfit.map(o => o[0].toLowerCase()).join(" + "))}.` };
+    if (has(/cut|jeans|pants|skirt|dress|jacket|blazer/)) return { html: `Cuts to try: ${esc(r.cuts.slice(0, 2).join("; ").toLowerCase())}.` };
+    return { html: `${esc(r.shapes[0])}, plus ${esc((r.shapes[1] || r.cuts[0]).toLowerCase())}. Wear what you love, and these are just flattering ideas.` };
+  }
   if (has(/korean personal|퍼스널|personal colou?r|colou?r analysis|12 types?|twelve types|how does (glowtone|it|this app|the app) work|how accurate|accuracy/) && !has(/my (season|type|colou?r)/))
     return { html: "Korean personal color analysis (퍼스널 컬러) checks your undertone (warm or cool) first, then lightness, clarity and the contrast between your skin, hair and eyes, which gives one of 12 types. Glowtone runs on your phone, so think of it as a guide, not a final verdict." };
   if (!t) return { html: "I don't have your results yet. Tap Home → Start analysis (about 3 minutes), then ask me about your best colors, makeup or metals!" };

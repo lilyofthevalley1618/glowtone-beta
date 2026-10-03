@@ -6,6 +6,7 @@ import { expertScan } from "./expert.js";
 import { colorOfDay, tipOfDay } from "./daily.js";
 import { chatView, mountChat } from "./chat.js";
 import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip } from "./makeup.js";
+import { STEPS as ST_STEPS, quizView, resultsView, styleResult, bodySVG } from "./style.js";
 import { findFace } from "./face.js";
 import * as store from "./storage.js";
 
@@ -72,10 +73,11 @@ result: () => { const r = S.result, x = S.expert;
 home: () => {
   if (S.tab === "home") return homeTab();
   if (S.tab === "chat") return chatView(S);
+  if (store.isLocked(S.tab)) return lockView(S.tab);
   if (S.tab === "makeup") return makeupTab();
   const t = S.result ? byId[(S.view === "scan" && S.expert ? S.expert : S.result).type] : null;
   if (!t) return soon("Profile", "Finish an analysis to see your season, palettes and makeup colors here.") + `<div class="row"><button class="btn" data-act="start">Start analysis</button></div>`;
-  if (S.tab === "style") return soon("Style", "Flattering cuts and outfit colors for your type, with optional body questions. Body-positive, always.");
+  if (S.tab === "style") return styleTab();
   if (S.tab === "skin") return soon("Skin", "A Korean skincare quiz with researched K-beauty routines. Not medical advice.");
   const m = t.makeup;
   const sw2 = viewSwitch();
@@ -111,6 +113,21 @@ const makeupTab = () => {
   <div class="h-block"><p class="h-label">Foundation undertone</p><p class="h-text">${esc(FOUNDATION[tone])}</p><p class="h-text">${esc(SHADE_TEST)}</p></div>
   ${mkRow("Skip these", M.avoid)}
   <div class="h-block h-soon"><p class="h-label">Product picks</p><p class="h-fine">Coming soon</p></div></section>`; };
+const lockView = tab => { const P = store.PREMIUM, name = tab === "style" ? "Style" : "Makeup";
+  const peek = tab === "style" ? `<div class="lock-peek">${bodySVG("hourglass")}${bodySVG("straight")}${bodySVG("inverted")}</div>` : `<div class="lock-peek mk-row">${["#C58A73", "#D9A68C", "#9C8572", "#6F5241"].map(h => `<div class="mk"><i style="--c:${h}"></i></div>`).join("")}</div>`;
+  return `<section class="screen home lock"><div class="lock-blur" aria-hidden="true">${peek}</div>
+  <div class="h-block lock-card"><p class="h-label">Glowtone Premium</p><p class="h-name">Unlock ${name}</p>
+  <p class="h-text">${tab === "style" ? "Flattering shapes, cuts and necklines in your season palette." : "Lip, blush, eyeshadow and liner shades for your type, plus foundation tips."}</p>
+  <p class="lock-price"><b>${P.price}</b> ${P.note} · Style + Makeup</p><p class="h-fine">✨ ${P.launchOffer}</p>
+  <button class="btn" data-act="unlock">Unlock (coming soon)</button><button class="link" data-act="lockLater">Maybe later</button></div></section>`; };
+const styleTab = () => {
+  const st = S.style || (S.style = { i: 0, ans: {}, quiz: false });
+  if (!S.result) return `<section class="screen home"><div class="h-block"><p class="h-label">Style</p><p class="h-text">Find your personal color first, then we'll show flattering shapes and cuts in your palette.</p></div><button class="link h-start" data-act="start">Take the analysis →</button></section>`;
+  const saved = store.load().style, t = byId[(S.view === "scan" && S.expert ? S.expert : S.result).type];
+  if (st.quiz || !saved) { if (!st.quiz && !saved) return `<section class="screen home"><div class="h-block"><p class="h-label">Style</p><p class="h-name">Find your flattering shapes</p><p class="h-text">8 quick questions about your shape, fit and vibe. Optional ones can be skipped, and everything stays on your phone.</p></div><button class="btn" data-act="stStart" style="align-self:flex-start">Start style quiz</button></section>`;
+    return quizView(st); }
+  return resultsView(styleResult(saved, t), t, saved, viewSwitch());
+};
 const homeTab = () => { const t = S.result && byId[S.result.type], c = colorOfDay(t), today = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
   return `<section class="screen home">
   <p class="h-date">${esc(today)}</p>
@@ -165,6 +182,16 @@ document.addEventListener("click", e => {
     toCamera: () => go("camera"),
     signin: () => { document.getElementById("signinNote").hidden = false; }, // milestone 2: Firebase Google sign-in
     view: () => { S.view = b.dataset.v; render(); },
+    stStart: () => { S.style = { i: 0, ans: {}, quiz: true }; render(); },
+    stRetake: () => { S.style = { i: 0, ans: { ...(store.load().style || {}) }, quiz: true }; render(); },
+    stBack: () => { S.style.i--; render(); },
+    stAns: () => { const st = S.style, s = ST_STEPS[st.i], v = b.dataset.v;
+      if (s.multi) { let a = st.ans[s.id] || []; a = a.includes(v) ? a.filter(x => x !== v) : v === "none" ? ["none"] : [...a.filter(x => x !== "none"), v]; st.ans[s.id] = a.slice(-s.multi); render(); }
+      else { st.ans[s.id] = v; stNext(); } },
+    stWeight: () => { const w = (document.getElementById("stW").value || "").trim(); S.style.ans.weight = w || "skip"; stNext(); },
+    stNext: () => stNext(),
+    unlock: () => alert("Premium checkout is coming soon. During the beta everything is free! 💛"),
+    lockLater: () => go("home", { tab: "home" }),
     mkpref: () => { const st = store.load(), mk = st.mk || {}; mk[b.dataset.k] = mk[b.dataset.k] === b.dataset.v ? undefined : b.dataset.v; store.save({ ...st, mk }); render(); },
     retake: () => go("quiz", { qi: 0, photo: null, drape: null }),
   };
@@ -275,6 +302,8 @@ async function startAnalyze(src) {
     show();
   }
 }
+function stNext() { const st = S.style; if (st.i < ST_STEPS.length - 1) { st.i++; render(); window.scrollTo(0, 0); return; }
+  const ans = { ...st.ans, date: new Date().toISOString() }; store.save({ ...store.load(), style: ans }); S.style = { i: 0, ans: {}, quiz: false }; render(); window.scrollTo(0, 0); }
 function setText(t, h) { document.getElementById("aTitle").textContent = t; document.getElementById("aHint").textContent = h; }
 function ctl(html) { document.getElementById("aCtl").innerHTML = html; }
 function labHex({ L, a, b }) { // Lab -> sRGB hex for the skin chip
