@@ -3,6 +3,8 @@ import { analyze } from "./color.js";
 import { combine } from "./classify.js";
 import { TYPES, byId, nameOf, LEGACY } from "./palettes.js";
 import { expertScan } from "./expert.js";
+import { colorOfDay, tipOfDay } from "./daily.js";
+import { chatView, mountChat } from "./chat.js";
 import { findFace } from "./face.js";
 import * as store from "./storage.js";
 
@@ -68,6 +70,7 @@ result: () => { const r = S.result, x = S.expert;
   <button class="link" data-act="retake">Retake</button></section>`; },
 home: () => {
   if (S.tab === "home") return homeTab();
+  if (S.tab === "chat") return chatView(S);
   const t = S.result ? byId[(S.view === "scan" && S.expert ? S.expert : S.result).type] : null;
   if (!t) return soon("Profile", "Finish an analysis to see your season, palettes and makeup colors here.") + `<div class="row"><button class="btn" data-act="start">Start analysis</button></div>`;
   if (S.tab === "style") return soon("Style", "Flattering cuts and outfit colors for your type, with optional body questions. Body-positive, always.");
@@ -86,15 +89,14 @@ home: () => {
   ${(() => { const src = S.view === "scan" && S.expert ? S.expert : S.result; return `<p class="tiny">${src === S.expert ? "Expert scan" : "Your picks"} · ${new Date(S.result.date).toLocaleDateString()} · ${src.label} confidence (${src.conf}%)</p>`; })()}
   <div class="row"><button class="btn ghost" data-act="retake">Retake analysis</button><a class="btn ghost" id="fb" href="${store.FEEDBACK_URL.startsWith("PASTE") ? "#" : store.FEEDBACK_URL}" target="_blank" rel="noopener">💌 Send feedback</a></div></section>`; },
 };
-const homeTab = () => { const t = S.result && byId[S.result.type];
-  return `<section class="screen">
-  <p class="eyebrow" style="align-self:flex-start">Glowtone beta</p>
-  <h1 class="hi">Hi there 👋</h1>
-  <p class="sub">${t ? `Your season is <b>${t.season} ${t.tone} ${t.sub}</b> (${t.ko}). Ready to glow?` : "Let's find the colors that make you glow, Korean personal color style."}</p>
-  <div class="homecard">${t ? `<div class="mini">${t.best.slice(0, 5).map(([, h]) => `<i style="--c:${h}"></i>`).join("")}</div>` : `<div class="logo big" style="margin:4px auto 10px"></div>`}
-  <button class="btn" data-act="${t ? "toProfile" : "start"}">${t ? "See your season" : "Start analysis"}</button>
-  ${t ? `<button class="link" data-act="retake">Retake analysis</button>` : `<p class="tiny">About 3 minutes · photos never leave your phone</p>`}</div>
-  <div class="soon-card"><b>✨ More coming soon</b><p class="muted">New things to explore with your colors are on the way. Thanks for testing!</p></div></section>`; };
+const homeTab = () => { const t = S.result && byId[S.result.type], c = colorOfDay(t), today = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  return `<section class="screen home">
+  <p class="h-date">${esc(today)}</p>
+  <div class="h-block"><p class="h-label">Color of the day</p>
+    <div class="h-color"><i style="--c:${c.hex}"></i><div><p class="h-name">${esc(c.name)}</p><p class="h-text">${esc(c.tip)}</p></div></div></div>
+  <div class="h-block"><p class="h-label">K-beauty tip</p><p class="h-text">${esc(tipOfDay())}</p><p class="h-fine">General tips, not medical advice.</p></div>
+  <div class="h-block h-soon"><p class="h-label">Product picks</p><p class="h-fine">Coming soon</p></div>
+  ${t ? "" : `<button class="link h-start" data-act="start">Start analysis →</button>`}</section>`; };
 const panel = (title, sub, id, label, conf, why, ru) => { const t = byId[id];
   return `<div class="panel" style="--c1:${t.card[0]};--c2:${t.card[1]}"><p class="pk">${title}</p><p class="tiny">${sub}</p>
   <p class="pt">${t.season} ${t.tone} ${t.sub}</p><p class="sc-ko" lang="ko">${t.ko}</p>
@@ -122,6 +124,7 @@ function render() {
   $tabs.hidden = S.screen !== "home";
   $tabs.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.tab === S.tab));
   if (S.screen === "camera") startCam();
+  if (S.screen === "home" && S.tab === "chat") S.chat = mountChat(S, render);
   const fb = document.getElementById("fb");
   if (fb && fb.getAttribute("href") === "#") fb.onclick = e => { e.preventDefault(); alert("Feedback form coming soon. Thanks for testing Glowtone! 💛"); };
 }
