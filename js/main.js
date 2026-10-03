@@ -5,7 +5,8 @@ import { TYPES, byId, nameOf, LEGACY } from "./palettes.js?v=20261003b";
 import { expertScan } from "./expert.js?v=20261003b";
 import { colorOfDay, tipOfDay, dayIndex } from "./daily.js?v=20261003b";
 import { chatView, mountChat } from "./chat.js?v=20261003b";
-import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip } from "./makeup.js?v=20261003b";
+import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip, finishSteps } from "./makeup.js?v=20261003b";
+import { picksFor, CHECKED } from "./products.js?v=20261003b";
 import { STEPS as ST_STEPS, quizView, resultsView, styleResult, bodySVG } from "./style.js?v=20261003b";
 import { findFace } from "./face.js?v=20261003b";
 import * as store from "./storage.js?v=20261003b";
@@ -95,25 +96,37 @@ home: () => {
   <div class="row"><button class="btn ghost" data-act="retake">Retake analysis</button><a class="btn ghost" id="fb" href="${store.FEEDBACK_URL.startsWith("PASTE") ? "#" : store.FEEDBACK_URL}" target="_blank" rel="noopener">💌 Send feedback</a></div></section>`; },
 };
 const viewSwitch = () => S.result && S.expert && S.expert.type !== S.result.type ? `<div class="seg"><button class="${S.view !== "scan" ? "on" : ""}" data-act="view" data-v="picks">Your picks</button><button class="${S.view === "scan" ? "on" : ""}" data-act="view" data-v="scan">Expert scan</button></div>` : "";
-const mkRow = (title, items, first) => `<div class="h-block"><p class="h-label">${title}${first ? ' <span class="start">start here</span>' : ""}</p><div class="mk-row">${items.map(([n, h]) => `<div class="mk"><i style="--c:${h}"></i><span>${esc(n)}</span></div>`).join("")}</div></div>`;
+const mkRow = (title, items, first) => `<div class="mk-sec"><p class="h-label">${title}${first ? ' <span class="start">start here</span>' : ""}</p><div class="mk-row">${items.map(([n, h]) => `<div class="mk"><i style="--c:${h}"></i><span>${esc(n)}</span></div>`).join("")}</div></div>`;
+const swatchSVG = (kind, hex) => kind === "lip" ? `<svg viewBox="0 0 40 56" aria-hidden="true"><path d="M13 22 L13 8 Q20 1 27 6 L27 22 Z" fill="${hex}"/><rect x="11" y="22" width="18" height="8" rx="2" fill="#E9DFD3"/><rect x="9" y="30" width="22" height="22" rx="4" fill="#D9CCBD"/></svg>`
+  : kind === "blush" ? `<svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="25" fill="#EFE7DD"/><circle cx="28" cy="28" r="18" fill="${hex}"/><ellipse cx="22" cy="22" rx="6" ry="3" fill="#fff" opacity=".25"/></svg>`
+  : kind === "eyes" ? `<svg viewBox="0 0 56 56" aria-hidden="true"><rect x="2" y="2" width="52" height="52" rx="12" fill="#EFE7DD"/>${hex.map((h, i) => `<circle cx="${17 + (i % 2) * 22}" cy="${17 + Math.floor(i / 2) * 22}" r="9" fill="${h}"/>`).join("")}</svg>`
+  : `<svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="25" fill="#E9DFD3"/><circle cx="28" cy="28" r="19" fill="${hex}"/><circle cx="28" cy="28" r="12" fill="#fff" opacity=".35"/></svg>`;
+const prodCard = (p, kind) => `<div class="pc"><div class="pc-sw">${swatchSVG(kind, p.hex)}</div><div class="pc-body">
+  <p class="pc-brand">${esc(p.line.brand)}</p><p class="pc-name">${esc(p.line.name)}</p><p class="pc-shade">${esc(p.shade)}</p>
+  <p class="pc-note">${esc(p.note)}${p.other ? ` · also ${esc(p.other.filter(o => o !== p.shade).join(", "))}` : ""}</p>
+  <p class="pc-meta">About $${Math.round(p.line.price)}, checked ${CHECKED} · <a href="${esc(p.line.url)}" target="_blank" rel="noopener">View product</a></p></div></div>`;
 const makeupTab = () => {
-  if (!S.result) return `<section class="screen home"><div class="h-block"><p class="h-label">Makeup</p><p class="h-text">Your lip, blush, eye and liner shades will appear here once you know your personal color.</p></div><button class="link h-start" data-act="start">Take the analysis →</button></section>`;
+  if (!S.result) return `<section class="screen home mkup"><div class="h-block"><p class="h-label">Makeup</p><p class="h-name">Your shades, in one place</p><p class="h-text">Lip, blush and eye shades plus product picks will appear here once you know your personal color.</p></div><button class="link h-start" data-act="start">Take the analysis →</button></section>`;
   const t = byId[(S.view === "scan" && S.expert ? S.expert : S.result).type], M = MAKEUP[t.id], P = store.load().mk || {};
   const bold = P.look === "bold", ord = a => bold ? [...a].reverse() : a; // lists run soft → bold
   const tone = S.expert && byId[S.expert.type].tone !== byId[S.result.type].tone ? "Neutral" : t.tone;
   const secs = { lip: ["Lips", ord(M.lip)], blush: ["Blush", ord(M.blush)], eyes: ["Eyeshadow", ord(M.eyes)], liner: ["Liner", ord(M.liner)] };
   const order = bold ? ["lip", "liner", "eyes", "blush"] : ["blush", "lip", "eyes", "liner"];
+  const PK = picksFor(t, P.finish, P.look, tone), fin = P.finish;
+  const porder = fin === "dewy" ? ["base", "blush", "lip", "eyes"] : fin === "matte" ? ["lip", "base", "blush", "eyes"] : bold ? ["lip", "eyes", "blush", "base"] : ["blush", "lip", "base", "eyes"];
+  const ptitle = { lip: fin === "matte" ? "Velvet lips" : fin === "dewy" ? "Glossy & glowy lips" : "Lips", blush: fin === "dewy" ? "Cream & liquid blush" : fin === "matte" ? "Powder blush" : "Blush", eyes: "Eyeshadow palettes", base: fin === "dewy" ? "Dewy cushion" : fin === "matte" ? "Soft-matte cushion" : "Cushion" };
   const opt = (k, v, label) => `<button class="${P[k] === v ? "on" : ""}" data-act="mkpref" data-k="${k}" data-v="${v}">${label}</button>`;
   return `<section class="screen home mkup">${viewSwitch()}
-  <div class="h-block"><p class="h-label">Makeup for</p><p class="h-name">${t.season} ${t.tone} ${t.sub} <span class="ko" lang="ko">${t.ko}</span></p></div>
-  <div class="h-block mk-quiz"><p class="h-label">Tailor it <span class="fine">(optional)</span></p>
+  <div class="h-block"><p class="h-label">Makeup for</p><p class="h-name">${t.season} ${t.tone} ${t.sub}</p></div>
+  <div class="cg-card"><p class="h-label">Tailor it <span class="fine">optional</span></p>
     <div class="seg sm">${opt("finish", "matte", "Matte")}${opt("finish", "satin", "Satin")}${opt("finish", "dewy", "Dewy")}</div>
     <div class="seg sm">${opt("look", "everyday", "Everyday")}${opt("look", "bold", "Bold")}</div>
-    ${P.finish ? `<p class="h-text">${esc(finishTip(P.finish, t))}</p>` : ""}</div>
-  ${order.map((k, i) => mkRow(secs[k][0], secs[k][1], i === 0 && P.look)).join("")}
-  <div class="h-block"><p class="h-label">Foundation undertone</p><p class="h-text">${esc(FOUNDATION[tone])}</p><p class="h-text">${esc(SHADE_TEST)}</p></div>
-  ${mkRow("Skip these", M.avoid)}
-  <div class="h-block h-soon"><p class="h-label">Product picks</p><p class="h-fine">Coming soon</p></div></section>`; };
+    ${fin ? `<p class="h-text">${esc(finishTip(fin, t))}</p><ul class="cg-list">${finishSteps(fin, t).map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : `<p class="h-fine">Pick a finish to filter the product picks and tips.</p>`}</div>
+  <div class="cg-card">${order.map((k, i) => mkRow(secs[k][0], secs[k][1], i === 0 && P.look)).join("")}</div>
+  <div class="h-block"><p class="h-label">Product picks</p><p class="h-fine">Affordable K-beauty matched to ${t.season} ${t.sub}${fin ? `, ${fin} finish` : ""}. Shade colors are approximate. Prices are rough and can change.</p></div>
+  ${porder.map(k => `<div class="cg-card"><p class="h-label">${ptitle[k]}</p>${PK[k].length ? PK[k].map(p => prodCard(p, k)).join("") : `<p class="h-fine">No ${fin} picks here yet.</p>`}</div>`).join("")}
+  <div class="cg-card"><p class="h-label">Foundation undertone</p><p class="h-text">${esc(FOUNDATION[tone])}</p><p class="h-text">${esc(SHADE_TEST)}</p></div>
+  <div class="cg-card">${mkRow("Skip these", M.avoid)}</div></section>`; };
 const lockView = tab => { const P = store.PREMIUM, name = tab === "style" ? "Style" : "Makeup";
   const peek = tab === "style" ? `<div class="lock-peek">${bodySVG("hourglass")}${bodySVG("straight")}${bodySVG("inverted")}</div>` : `<div class="lock-peek mk-row">${["#C58A73", "#D9A68C", "#9C8572", "#6F5241"].map(h => `<div class="mk"><i style="--c:${h}"></i></div>`).join("")}</div>`;
   return `<section class="screen home lock"><div class="lock-blur" aria-hidden="true">${peek}</div>

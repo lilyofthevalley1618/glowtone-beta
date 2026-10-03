@@ -10,6 +10,7 @@ import { KBEAUTY_TIPS, tipOfDay, colorOfDay } from "./daily.js?v=20261003b";
 import { MAKEUP, FOUNDATION, SHADE_TEST } from "./makeup.js?v=20261003b";
 import { styleResult } from "./style.js?v=20261003b";
 import { load } from "./storage.js?v=20261003b";
+import { picksFor } from "./products.js?v=20261003b";
 import { skinResult, routine, TYPE_INFO, FLAG_INFO, SAFE, PATCH } from "./skin.js?v=20261003b";
 
 const AIKEY = "glowtone.ai";
@@ -73,6 +74,11 @@ const lc1 = x => /^[A-Z][a-z]/.test(x) ? x[0].toLowerCase() + x.slice(1) : x;
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 export function offlineAnswer(c, q) {
   const s = q.toLowerCase(), t = c.t, has = re => re.test(s);
+  if (t && has(/\b(products?|buy|brands?|recommend|which (tint|blush|cushion|palette|lipstick)|what (tint|blush|cushion|palette) should)/) && !has(/skin ?care|serum|toner|cleanser|sunscreen|moistur/)) {
+    const mk = load().mk || {}, P = picksFor(t, mk.finish, mk.look, t.tone), cat = has(/blush|cheek/) ? "blush" : has(/eye|shadow|palette/) ? "eyes" : has(/cushion|foundation|base/) ? "base" : "lip";
+    const ps = P[cat].slice(0, 2).map(p => `${p.line.brand} ${p.line.name} in ${p.shade}`);
+    return { html: `For ${esc(nameOf(t))}, try ${esc(ps.join(" or "))}. The Makeup tab has links and rough prices (checked Oct 2026).` };
+  }
   if (has(/\b(tip|skincare|skin ?care|k-?beauty|routine|sunscreen|spf|cleans|moistur|toner|serum|essence|mask|exfoliat|acne|pimple|breakout|patch|my skin|skin type|rash|eczema|itch|rosacea|cyst)/)) {
     if (has(/\b(rash|eczema|psoria|rosacea|allerg|hurts?|painful|bleed|infect|swell|burns?|burning|itch|cyst|mole|medication|prescri|accutane|isotretinoin)/)) return { html: "That sounds like something a dermatologist or doctor should look at, especially if it's painful, spreading or not going away. Until then, keep things gentle and stop anything that stings." };
     if (c.sk) { const R = c.sk, steps = routine(R), tn = TYPE_INFO[R.type][0].toLowerCase(), fine = ` <span class="fine">${esc(SAFE.split(".")[0])}.</span>`;
@@ -165,12 +171,11 @@ export function chatView(S) {
   if (!CHAT.msgs.length) CHAT.msgs.push({ who: "bot", html: c.t ? `Hi! I'm your Glowtone helper. Ask me anything about your colors as <b>${esc(nameOf(c.t))}</b>.` : "Hi! I'm your Glowtone helper. Finish an analysis and I can answer questions about your colors. You can still ask me about Korean personal color or skincare tips." });
   const sugg = c.t ? ["What are my best colors?", "Can I wear black?", "Which lip colors suit me?", "Gold or silver?", "Why do my picks and scan differ?"] : ["What is Korean personal color?", "Today's K-beauty tip"];
   return `<section class="screen chat">
-  <div class="ch-head"><span class="logo"></span><div style="flex:1"><b>Ask Glowtone</b><div class="ch-mode">${ai ? `AI mode · ${esc(cfg.model)} (your key)` : "Offline helper · answers from your Glowtone results"}</div></div><button class="iconbtn" id="aiGear" aria-label="AI settings">⚙️</button></div>
-  <div class="ch-ctx"><span class="ctxchip">${esc(c.label)}</span></div>
+  <div class="ch-head"><div style="flex:1"><b>Ask Glowtone</b><div class="ch-mode">${ai ? `AI mode · ${esc(cfg.model)}, your key` : "Answers from your results"} · ${esc(c.label)}</div></div><button class="iconbtn" id="aiGear" aria-label="AI settings">⚙︎</button></div>
   ${CHAT.settings ? aiPanel() : ""}
   <div class="msgs" id="msgs" aria-live="polite"></div>
-  <div class="sugg" id="sugg">${sugg.map(s => `<button>${esc(s)}</button>`).join("")}</div>
-  <div class="composer"><textarea id="chIn" rows="1" placeholder="Ask about your colors…" aria-label="Your question"></textarea><button class="btn sm" id="chSend">Send</button></div></section>`;
+  <div class="ch-bottom"><div class="sugg" id="sugg">${sugg.map(s => `<button>${esc(s)}</button>`).join("")}</div>
+  <div class="composer"><textarea id="chIn" rows="1" placeholder="Ask about your colors…" aria-label="Your question"></textarea><button class="btn sm" id="chSend">Send</button></div></div></section>`;
 }
 export function mountChat(S, rerender) {
   const c = chatCtx(S), box = document.getElementById("msgs");

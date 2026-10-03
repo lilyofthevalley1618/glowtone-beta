@@ -37,3 +37,11 @@ export function finishTip(finish, type) {
   if (finish === "matte") return `Matte: try a velvet or blurred lip, powder blush and a soft-matte cushion.${light ? " Pick sheer, blurred mattes so the look doesn't get heavy on your light coloring." : soft ? " Velvet textures match your muted coloring beautifully." : ""}`;
   return `Satin: try a satin lipstick or tinted balm and a cream-to-powder blush, for a soft glow without a lot of shine.${clear ? " Add a clear gloss on the center of your lips for extra pop." : ""}`;
 }
+
+// Concrete how-to steps per finish (shown under the tip; changes with the finish choice).
+export function finishSteps(finish, type) {
+  const soft = /Mute/.test(type.sub), deep = /Deep/.test(type.sub);
+  if (finish === "dewy") return ["Prep with a hydrating toner and a thin moisturizer so the cushion stays glowy, not greasy.", "Tap cream or liquid blush high on the cheeks with your fingers, then blend upward.", soft ? "Use a glossy tint lightly and blot once so the shine stays soft." : "Layer a juicy tint, then add a dab to the center of your lips."];
+  if (finish === "matte") return ["Press the cushion in thin layers. Powder only your T-zone.", "Sweep powder blush on with a fluffy brush, using light layers.", deep ? "Velvet tint looks rich on you: apply fully, then blur the edges with a fingertip." : "Dab velvet tint in the center and blur it out for a soft gradient lip."];
+  return ["Use a glow cushion and set only the sides of your nose and chin.", "Mix finishes: powder blush with a glossy lip, or cream blush with a velvet lip.", "Blot a glossy tint once, or tap a little balm over a velvet tint."];
+}
