@@ -28,11 +28,12 @@ export function toggle(part, step) {
   store.save({ ...st, check: c, streak: s });
 }
 export function routineCard() {
+  if (!store.load().skin) return `<button class="card rt-cta" data-act="rtStart"><p class="h-label">Your routine</p><p class="rt-cta-t">Take the Skin quiz to get your routine →</p><p class="h-text">12 quick questions. Then you'll get a daily morning and night checklist and a glow streak.</p></button>`;
   const S = steps(), c = today(store.load()), k = streakNow();
   const row = (part, label) => `<div class="rt-part"><p class="rt-when">${label}</p><div class="rt-steps">${S[part].map(x => { const on = c[part].includes(x);
     return `<button class="rt-step${on ? " on" : ""}" data-act="rtTog" data-p="${part}" data-s="${esc(x)}" aria-pressed="${on}"><span class="rt-box">${on ? "✓" : ""}</span>${esc(x)}</button>`; }).join("")}</div></div>`;
   const msg = k.doneToday ? "All done today. Nice and gentle." : k.cur ? "Finish today's steps to keep it going." : "Check off today's steps to start a streak.";
-  return `<div class="card rt"><div class="rt-head"><p class="h-label">Today's routine</p>${S.fromSkin ? "" : `<button class="link rt-skin" data-tab="skin">Personalize</button>`}</div>
+  return `<div class="card rt"><div class="rt-head"><p class="h-label">Today's routine</p></div>
   ${row("am", "Morning")}${row("pm", "Night")}
   <div class="streak"><div><b>${k.cur}</b><span>day glow streak</span></div><div><b>${k.best}</b><span>best</span></div></div><p class="h-fine">${msg}</p></div>`;
 }

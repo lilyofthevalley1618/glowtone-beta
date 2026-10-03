@@ -147,8 +147,6 @@ const skinTab = () => { const sk = S.skin || (S.skin = { i: 0, ans: {}, quiz: fa
   if (sk.quiz) return skQuizView(sk);
   if (saved) return skResultsView(skinResult(saved));
   return `<section class="screen home"><div class="h-block"><p class="h-label">Skin</p><p class="h-name">Find your K-beauty routine</p><p class="h-text">12 quick questions about how your skin feels. You'll get your skin type, any concerns to keep in mind, and a morning and night routine by step. Free, and everything stays on your phone.</p></div><button class="btn" data-act="skStart" style="align-self:flex-start">Start skin quiz</button><p class="h-fine">Not medical advice. See a dermatologist for serious, painful or persistent concerns.</p></section>`; };
-export const DRESS = `<svg class="ic-dress" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 2.5 10 6.4 8.1 9.6 4.6 20.6c-.2.6.3 1.1.9 1.1h13c.6 0 1.1-.5.9-1.1L15.9 9.6 14 6.4l.8-3.9h-1.3L12 5.7l-1.5-3.2z" fill="#B9D3A6" stroke="#8FB07A" stroke-width=".9" stroke-linejoin="round"/><path d="M8.3 9.8c2.4.9 5 .9 7.4 0" fill="none" stroke="#8FB07A" stroke-width=".9" stroke-linecap="round"/></svg>`;
-const ICONS = { home: "🏠", profile: "🎨", makeup: "💋", style: DRESS, skin: "🫧", chat: "💌" };
 const greetWord = (h = new Date().getHours()) => h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 const cap1 = w => w[0].toUpperCase() + w.slice(1);
 const aN = w => (/^[aeiou]/i.test(w) ? "an " : "a ") + w;
@@ -164,9 +162,6 @@ const homeTab = () => { const st = store.load(), t = S.result && byId[(S.view ==
   const name = (st.name || "").trim(), editing = S.nameEdit || (!name && !st.nameAsked);
   const greet = name ? `${greetWord()}, ${esc(name)}` : `${greetWord()} ✨`;
   const idea = styleIdea(t, st.style, i);
-  const sampleQs = t ? [st.style ? "What necklines suit me?" : "Can I wear black?", "Which lip colors suit me?", "Gold or silver?"] : ["What is Korean personal color?"];
-  const sq = sampleQs[i % sampleQs.length];
-  const qs = (tab, title, sub, done, soon) => `<button class="qs" ${soon ? "disabled" : `data-tab="${tab}"`}><span class="qs-ic">${ICONS[tab]}</span><b>${title}</b><span class="qs-sub">${soon ? "Coming soon" : sub}</span>${done ? '<span class="qs-done" aria-label="Done">✓</span>' : ""}</button>`;
   return `<section class="screen home2">
   <div class="greet"><p class="h-date">${esc(new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }))}</p>
     <h1>${greet}</h1>
@@ -176,7 +171,6 @@ const homeTab = () => { const st = store.load(), t = S.result && byId[(S.view ==
   <div class="card"><p class="h-label">K-beauty tip</p><p class="h-body">${esc(tipOfDay())}</p><p class="h-fine">General tips, not medical advice.</p></div>
   ${glow.routineCard()}
   ${glow.weatherCard()}
-  <div><p class="h-label" style="margin-bottom:12px">Quick start</p><div class="qs-row">${qs("style", "Style", st.style ? "See your style" : "8 quick questions", !!st.style)}${qs("makeup", "Makeup", st.mkSeen ? "Your shades" : "Find your shades", !!st.mkSeen)}${qs("skin", "Skin", st.skin ? "Your routine" : "12 quick questions", !!st.skin)}</div></div>
   ${idea ? `<div class="card"><p class="h-label">Style idea of the day</p><div class="st-outfit">${idea.colors.map(([n, h]) => `<i style="--c:${h}" title="${esc(n)}"></i>`).join("")}</div><p class="h-body">${esc(idea.text)}</p>${idea.nudge ? `<button class="link h-start" data-tab="style">Take the Style quiz for ideas that fit your shape →</button>` : ""}</div>` : `<div class="card"><p class="h-label">Style idea of the day</p><p class="h-body">Find your season and you'll get a fresh outfit idea in your colors every day.</p><button class="link h-start" data-act="start">Start your color analysis →</button></div>`}
   <div class="h-soon"><p class="h-label">Product picks</p><p class="h-fine">Coming soon</p></div>
   <button class="fb-open" data-act="fbOpen">Feedback</button></section>`; };
@@ -208,8 +202,7 @@ function render() {
   $tabs.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.tab === S.tab));
   if (S.screen === "camera") startCam();
   if (S.screen === "home" && S.tab === "home") { glow.refreshWeather(() => { if (S.screen === "home" && S.tab === "home") render(); }); const ci = document.getElementById("wxCity"); if (ci) ci.onkeydown = e => { if (e.key === "Enter") glow.setCity(ci.value, render); }; }
-  if (S.screen === "home" && S.tab === "chat") { S.chat = mountChat(S, render); if (S.pendingChat) { const q = S.pendingChat; S.pendingChat = null; S.chat.send(q); } }
-  if (S.screen === "home" && S.tab === "makeup" && S.result && !store.isLocked("makeup") && !store.load().mkSeen) store.save({ ...store.load(), mkSeen: true });
+  if (S.screen === "home" && S.tab === "chat") { S.chat = mountChat(S, render); }
 }
 
 // ---------- actions ----------
@@ -244,6 +237,7 @@ document.addEventListener("click", e => {
     stNext: () => stNext(),
     unlock: () => alert("Premium checkout is coming soon. During the beta everything is free! 💛"),
     lockLater: () => go("home", { tab: "home" }),
+    rtStart: () => { S.tab = "skin"; S.skin = { i: 0, ans: {}, quiz: true }; go("home"); window.scrollTo(0, 0); },
     rtTog: () => { glow.toggle(b.dataset.p, b.dataset.s); render(); },
     wxGeo: () => glow.useGeo(render),
     wxCity: () => glow.setCity(document.getElementById("wxCity")?.value, render),
@@ -253,7 +247,6 @@ document.addEventListener("click", e => {
     nameEdit: () => { S.nameEdit = true; render(); setTimeout(() => document.getElementById("nameIn")?.focus(), 30); },
     nameSave: () => { const v = (document.getElementById("nameIn").value || "").trim().slice(0, 24); store.save({ ...store.load(), name: v, nameAsked: true }); S.nameEdit = false; render(); },
     nameSkip: () => { store.save({ ...store.load(), nameAsked: true }); S.nameEdit = false; render(); },
-    askSample: () => { S.pendingChat = b.dataset.q; S.tab = "chat"; go("home"); },
     mkpref: () => { const st = store.load(), mk = st.mk || {}; mk[b.dataset.k] = mk[b.dataset.k] === b.dataset.v ? undefined : b.dataset.v; store.save({ ...st, mk }); render(); },
     retake: () => go("quiz", { qi: 0, photo: null, drape: null }),
   };

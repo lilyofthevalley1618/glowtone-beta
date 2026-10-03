@@ -175,7 +175,7 @@ export function chatView(S) {
   ${CHAT.settings ? aiPanel() : ""}
   <div class="msgs" id="msgs" aria-live="polite"></div>
   <div class="ch-bottom"><div class="sugg" id="sugg">${sugg.map(s => `<button>${esc(s)}</button>`).join("")}</div>
-  <div class="composer"><textarea id="chIn" rows="1" placeholder="Ask about your colors…" aria-label="Your question"></textarea><button class="btn sm" id="chSend">Send</button></div></div></section>`;
+  <div class="composer"><textarea id="chIn" rows="2" placeholder="Ask about your colors…" aria-label="Your question" enterkeyhint="enter"></textarea><button class="btn sm" id="chSend">Send</button></div></div></section>`;
 }
 export function mountChat(S, rerender) {
   const c = chatCtx(S), box = document.getElementById("msgs");
@@ -195,7 +195,7 @@ export function mountChat(S, rerender) {
   };
   const send = async q => {
     q = (q || "").trim(); if (!q || CHAT.busy) return;
-    CHAT.msgs.push({ who: "me", html: esc(q) }); document.getElementById("chIn").value = ""; paint();
+    CHAT.msgs.push({ who: "me", html: esc(q) }); { const t = document.getElementById("chIn"); t.value = ""; t.dispatchEvent(new Event("input")); } paint();
     if (aiReady()) {
       CHAT.busy = true; CHAT.msgs.push({ who: "bot", html: "<i>Thinking…</i>", tmp: true }); paint();
       try { const a = await aiAsk(c, CHAT.hist, q); CHAT.hist.push({ role: "user", content: q }, { role: "assistant", content: a }); CHAT.msgs = CHAT.msgs.filter(m => !m.tmp); CHAT.msgs.push({ who: "bot", html: mdLite(a), q }); }
@@ -205,7 +205,13 @@ export function mountChat(S, rerender) {
     if (document.body.contains(box)) paint();
   };
   document.getElementById("chSend").onclick = () => send(document.getElementById("chIn").value);
-  document.getElementById("chIn").onkeydown = e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(e.target.value); } };
+  const ta = document.getElementById("chIn"), touch = matchMedia("(pointer: coarse)").matches;
+  const grow = () => { ta.style.height = "auto"; const max = parseFloat(getComputedStyle(ta).maxHeight) || 150; ta.style.height = Math.min(ta.scrollHeight + 2, max) + "px"; ta.style.overflowY = ta.scrollHeight + 2 > max ? "auto" : "hidden"; };
+  ta.addEventListener("input", grow);
+  // Desktop: Enter sends, Shift+Enter = new line. Phones: Enter = new line, the Send button sends.
+  ta.onkeydown = e => { if (e.key === "Enter" && !e.shiftKey && !touch && !e.isComposing) { e.preventDefault(); send(ta.value); } };
+  const tabs = document.getElementById("tabs"); if (tabs) document.documentElement.style.setProperty("--tabsH", tabs.offsetHeight + "px");
+  grow();
   document.querySelectorAll("#sugg button").forEach(b => b.onclick = () => send(b.textContent));
   document.getElementById("aiGear").onclick = () => { CHAT.settings = !CHAT.settings; rerender(); };
   if (CHAT.settings) mountAiPanel(rerender);
