@@ -3,7 +3,7 @@ import { analyze } from "./color.js";
 import { combine } from "./classify.js";
 import { TYPES, byId, nameOf, LEGACY } from "./palettes.js";
 import { expertScan } from "./expert.js";
-import { colorOfDay, tipOfDay } from "./daily.js";
+import { colorOfDay, tipOfDay, dayIndex } from "./daily.js";
 import { chatView, mountChat } from "./chat.js";
 import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip } from "./makeup.js";
 import { STEPS as ST_STEPS, quizView, resultsView, styleResult, bodySVG } from "./style.js";
@@ -15,7 +15,7 @@ const saved = store.load();
 for (const r of [saved.result, saved.result && { type: saved.result.runnerUp }, saved.expert]) if (r && LEGACY[r.type]) r.type = LEGACY[r.type];
 if (saved.result && LEGACY[saved.result.runnerUp]) saved.result.runnerUp = LEGACY[saved.result.runnerUp];
 if (saved.expert && LEGACY[saved.expert.runnerUp]) saved.expert.runnerUp = LEGACY[saved.expert.runnerUp];
-const S = { screen: saved.result ? "home" : "welcome", tab: "home", view: "picks", expert: saved.expert || null, qi: 0, answers: saved.answers || {}, photo: null, drape: null, result: saved.result || null, stream: null };
+const S = { screen: "home", tab: "home", view: "picks", expert: saved.expert || null, qi: 0, answers: saved.answers || {}, photo: null, drape: null, result: saved.result || null, stream: null };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const sw = (list, cls = "sw") => list.map(([n, h]) => `<div class="${cls}"><i style="--c:${h}"></i><span>${esc(n)}</span></div>`).join("");
 function go(screen, extra = {}) { Object.assign(S, extra); if (screen !== "camera") stopCam(); S.screen = screen; render(); window.scrollTo(0, 0); }
@@ -128,14 +128,34 @@ const styleTab = () => {
     return quizView(st); }
   return resultsView(styleResult(saved, t), t, saved, viewSwitch());
 };
-const homeTab = () => { const t = S.result && byId[S.result.type], c = colorOfDay(t), today = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
-  return `<section class="screen home">
-  <p class="h-date">${esc(today)}</p>
-  <div class="h-block"><p class="h-label">Color of the day</p>
-    <div class="h-color"><i style="--c:${c.hex}"></i><div><p class="h-name">${esc(c.name)}</p><p class="h-text">${esc(c.tip)}</p></div></div></div>
-  <div class="h-block"><p class="h-label">K-beauty tip</p><p class="h-text">${esc(tipOfDay())}</p><p class="h-fine">General tips, not medical advice.</p></div>
-  <div class="h-block h-soon"><p class="h-label">Product picks</p><p class="h-fine">Coming soon</p></div>
-  ${t ? "" : `<button class="link h-start" data-act="start">Start analysis →</button>`}</section>`; };
+const ICONS = { home: "🏠", profile: "🎨", makeup: "💋", style: "👗", skin: "🫧", chat: "💌" };
+const greetWord = (h = new Date().getHours()) => h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+function styleIdea(t, saved, i) {
+  if (!t) return null;
+  const b = t.best, n = t.neutrals, top = b[i % b.length], bottom = n[(i + 1) % n.length], acc = b[(i + 3) % b.length];
+  if (saved) { const r = styleResult(saved, t), cut = r.cuts[i % r.cuts.length], shape = r.shapes[i % r.shapes.length], neck = r.necks[i % r.necks.length];
+    return { colors: [top, bottom, acc], text: `${shape}, with ${/^[aeiou]/i.test(neck) ? "an" : "a"} ${neck.toLowerCase()} top in ${top[0].toLowerCase()}, ${bottom[0].toLowerCase()} on the bottom and a pop of ${acc[0].toLowerCase()}. Try: ${cut.toLowerCase()}.`, nudge: false }; }
+  const ideas = [`A ${top[0].toLowerCase()} knit with ${bottom[0].toLowerCase()} straight-leg pants`, `A ${bottom[0].toLowerCase()} jacket over a ${top[0].toLowerCase()} tee`, `A ${top[0].toLowerCase()} shirt, ${bottom[0].toLowerCase()} bottoms and a ${acc[0].toLowerCase()} accessory`];
+  return { colors: [top, bottom, acc], text: ideas[i % ideas.length] + ".", nudge: true };
+}
+const homeTab = () => { const st = store.load(), t = S.result && byId[(S.view === "scan" && S.expert ? S.expert : S.result).type], c = colorOfDay(t), i = dayIndex();
+  const name = (st.name || "").trim(), editing = S.nameEdit || (!name && !st.nameAsked);
+  const greet = name ? `${greetWord()}, ${esc(name)}` : `${greetWord()} ✨`;
+  const idea = styleIdea(t, st.style, i);
+  const sampleQs = t ? [st.style ? "What necklines suit me?" : "Can I wear black?", "Which lip colors suit me?", "Gold or silver?"] : ["What is Korean personal color?"];
+  const sq = sampleQs[i % sampleQs.length];
+  const qs = (tab, title, sub, done, soon) => `<button class="qs" ${soon ? "disabled" : `data-tab="${tab}"`}><span class="qs-ic">${ICONS[tab]}</span><b>${title}</b><span class="qs-sub">${soon ? "Coming soon" : sub}</span>${done ? '<span class="qs-done" aria-label="Done">✓</span>' : ""}</button>`;
+  return `<section class="screen home2">
+  <div class="greet"><p class="h-date">${esc(new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }))}</p>
+    <h1>${greet}</h1>
+    ${editing ? `<div class="namebox"><label for="nameIn">What should we call you? <span class="fine">(optional, saved on this phone)</span></label><div class="row-l"><input id="nameIn" maxlength="24" value="${esc(name)}" placeholder="Your name" autocomplete="given-name"><button class="btn sm" data-act="nameSave">Save</button>${name || !st.nameAsked ? `<button class="link" data-act="nameSkip">${name ? "Cancel" : "Skip"}</button>` : ""}</div></div>` : `<button class="link edit" data-act="nameEdit">${name ? "Edit name" : "Add your name"}</button>`}
+    ${t ? `<p class="h-text">You're <b>${t.season} ${t.tone} ${t.sub}</b> <span lang="ko">${t.ko}</span></p>` : `<button class="link h-start" data-act="start">Start your color analysis →</button>`}</div>
+  <div class="card cod"><p class="h-label">Color of the day</p><div class="h-color"><i style="--c:${c.hex}"></i><div><p class="h-name">${esc(c.name)}</p><p class="h-text">${esc(c.tip)}</p></div></div></div>
+  <div class="card"><p class="h-label">K-beauty tip</p><p class="h-body">${esc(tipOfDay())}</p><p class="h-fine">General tips, not medical advice.</p></div>
+  <div><p class="h-label" style="margin-bottom:12px">Quick start</p><div class="qs-row">${qs("style", "Style", st.style ? "See your style" : "8 quick questions", !!st.style)}${qs("makeup", "Makeup", st.mkSeen ? "Your shades" : "Find your shades", !!st.mkSeen)}${qs("skin", "Skin", "", false, true)}</div></div>
+  ${idea ? `<div class="card"><p class="h-label">Style idea of the day</p><div class="st-outfit">${idea.colors.map(([n, h]) => `<i style="--c:${h}" title="${esc(n)}"></i>`).join("")}</div><p class="h-body">${esc(idea.text)}</p>${idea.nudge ? `<button class="link h-start" data-tab="style">Take the Style quiz for ideas that fit your shape →</button>` : ""}</div>` : `<div class="card"><p class="h-label">Style idea of the day</p><p class="h-body">Find your season and you'll get a fresh outfit idea in your colors every day.</p><button class="link h-start" data-act="start">Start your color analysis →</button></div>`}
+  <div class="card chatcard"><p class="h-label">${ICONS.chat} Try the Chat</p><p class="h-text">Ask anything about your colors, makeup or style.</p><button class="sample" data-act="askSample" data-q="${esc(sq)}">“${esc(sq)}”</button></div>
+  <div class="h-soon"><p class="h-label">Product picks</p><p class="h-fine">Coming soon</p></div></section>`; };
 const panel = (title, sub, id, label, conf, why, ru) => { const t = byId[id];
   return `<div class="panel" style="--c1:${t.card[0]};--c2:${t.card[1]}"><p class="pk">${title}</p><p class="tiny">${sub}</p>
   <p class="pt">${t.season} ${t.tone} ${t.sub}</p><p class="sc-ko" lang="ko">${t.ko}</p>
@@ -163,7 +183,8 @@ function render() {
   $tabs.hidden = S.screen !== "home";
   $tabs.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.tab === S.tab));
   if (S.screen === "camera") startCam();
-  if (S.screen === "home" && S.tab === "chat") S.chat = mountChat(S, render);
+  if (S.screen === "home" && S.tab === "chat") { S.chat = mountChat(S, render); if (S.pendingChat) { const q = S.pendingChat; S.pendingChat = null; S.chat.send(q); } }
+  if (S.screen === "home" && S.tab === "makeup" && S.result && !store.isLocked("makeup") && !store.load().mkSeen) store.save({ ...store.load(), mkSeen: true });
   const fb = document.getElementById("fb");
   if (fb && fb.getAttribute("href") === "#") fb.onclick = e => { e.preventDefault(); alert("Feedback form coming soon. Thanks for testing Glowtone! 💛"); };
 }
@@ -192,6 +213,10 @@ document.addEventListener("click", e => {
     stNext: () => stNext(),
     unlock: () => alert("Premium checkout is coming soon. During the beta everything is free! 💛"),
     lockLater: () => go("home", { tab: "home" }),
+    nameEdit: () => { S.nameEdit = true; render(); setTimeout(() => document.getElementById("nameIn")?.focus(), 30); },
+    nameSave: () => { const v = (document.getElementById("nameIn").value || "").trim().slice(0, 24); store.save({ ...store.load(), name: v, nameAsked: true }); S.nameEdit = false; render(); },
+    nameSkip: () => { store.save({ ...store.load(), nameAsked: true }); S.nameEdit = false; render(); },
+    askSample: () => { S.pendingChat = b.dataset.q; S.tab = "chat"; go("home"); },
     mkpref: () => { const st = store.load(), mk = st.mk || {}; mk[b.dataset.k] = mk[b.dataset.k] === b.dataset.v ? undefined : b.dataset.v; store.save({ ...st, mk }); render(); },
     retake: () => go("quiz", { qi: 0, photo: null, drape: null }),
   };

@@ -117,3 +117,17 @@ background:linear-gradient(165deg,var(--c1) 0%,var(--c2) 100%);box-shadow:0 20px
 #app{padding-bottom:32px}
 .composer{bottom:0;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
 .toast{bottom:90px}
+
+/* Home v2: calm cards, larger headers */
+.home2{gap:26px;padding-top:18px}.greet{display:flex;flex-direction:column;gap:8px}.greet h1{font-size:2.1rem;line-height:1.15;font-weight:800;letter-spacing:-.02em}
+.greet .edit{align-self:flex-start;padding:0;font-size:.85rem;color:#9A8FA6}.namebox{display:flex;flex-direction:column;gap:8px;font-size:.9rem;font-weight:700}
+.row-l{display:flex;gap:8px;align-items:center}.row-l input{flex:1;min-width:0;font:inherit;padding:10px 14px;border:1.5px solid var(--line);border-radius:14px;background:#fff}
+.card{background:#fff;border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:12px;box-shadow:0 8px 28px #3a33400b}
+.card .h-label{font-size:.8rem}.h-body{font-size:1.02rem;line-height:1.6;color:var(--ink)}
+.cod .h-color i{width:96px;height:96px}.cod .h-name{font-size:1.6rem}
+.qs-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.qs{position:relative;font:inherit;background:#fff;border:0;border-radius:20px;padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:var(--ink);box-shadow:0 8px 24px #3a33400b}
+.qs:disabled{opacity:.55;cursor:default}.qs-ic{font-size:1.6rem}.qs b{font-size:.95rem}.qs-sub{font-size:.72rem;color:var(--muted)}
+.qs-done{position:absolute;top:8px;right:10px;width:20px;height:20px;border-radius:50%;background:#B9D3A6;color:#fff;font-size:.72rem;font-weight:800;display:grid;place-items:center}
+.sample{font:inherit;font-weight:700;text-align:left;background:#F6F2FC;color:var(--accent);border:0;border-radius:16px;padding:12px 14px;cursor:pointer}
+.home2 .h-soon{opacity:.7}
