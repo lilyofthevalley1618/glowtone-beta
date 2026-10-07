@@ -1,5 +1,5 @@
 // Skin quiz + K-beauty routine. On-device only. General guidance, not medical advice. See docs/skincare-research.md.
-import { picksFor, swatch } from "./skincare.js?v=20261007a";
+import { picksFor, swatch } from "./skincare.js?v=20261007b";
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 export const SK_STEPS = [
   { id: "tight", q: "After washing your face, how does your skin feel?", hint: "About 30 minutes after washing, before any products.", opts: [["vtight", "Very tight, maybe itchy"], ["tight", "A little tight"], ["fine", "Comfortable"], ["shiny", "Already shiny"]] },

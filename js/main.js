@@ -1,19 +1,19 @@
-import { QUESTIONS, scoreQuiz } from "./quiz.js?v=20261007a";
-import { analyze } from "./color.js?v=20261007a";
-import { combine } from "./classify.js?v=20261007a";
-import { TYPES, byId, nameOf, LEGACY } from "./palettes.js?v=20261007a";
-import { expertScan } from "./expert.js?v=20261007a";
-import { colorOfDay, tipOfDay, dayIndex } from "./daily.js?v=20261007a";
-import { chatView, mountChat } from "./chat.js?v=20261007a";
-import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip, finishSteps } from "./makeup.js?v=20261007a";
-import { picksFor, CHECKED } from "./products.js?v=20261007a";
-import { STEPS as ST_STEPS, quizView, resultsView, styleResult, bodySVG } from "./style.js?v=20261007a";
-import { findFace } from "./face.js?v=20261007a";
-import * as store from "./storage.js?v=20261007a";
-import { openFeedback } from "./feedback.js?v=20261007a";
-import * as glow from "./glow.js?v=20261007a";
-import { faceMap } from "./facemap.js?v=20261007a";
-import { SK_STEPS, skQuizView, skResultsView, skinResult } from "./skin.js?v=20261007a";
+import { QUESTIONS, scoreQuiz } from "./quiz.js?v=20261007b";
+import { analyze } from "./color.js?v=20261007b";
+import { combine } from "./classify.js?v=20261007b";
+import { TYPES, byId, nameOf, LEGACY } from "./palettes.js?v=20261007b";
+import { expertScan } from "./expert.js?v=20261007b";
+import { colorOfDay, tipOfDay, dayIndex } from "./daily.js?v=20261007b";
+import { chatView, mountChat } from "./chat.js?v=20261007b";
+import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip, finishSteps } from "./makeup.js?v=20261007b";
+import { picksFor, CHECKED } from "./products.js?v=20261007b";
+import { STEPS as ST_STEPS, quizView, resultsView, styleResult, bodySVG } from "./style.js?v=20261007b";
+import { findFace } from "./face.js?v=20261007b";
+import * as store from "./storage.js?v=20261007b";
+import { openFeedback } from "./feedback.js?v=20261007b";
+import * as glow from "./glow.js?v=20261007b";
+import { faceMap } from "./facemap.js?v=20261007b";
+import { SK_STEPS, skQuizView, skResultsView, skinResult } from "./skin.js?v=20261007b";
 
 const $app = document.getElementById("app"), $tabs = document.getElementById("tabs");
 const saved = store.load();
@@ -87,7 +87,7 @@ home: () => {
   const m = t.makeup;
   const sw2 = viewSwitch();
   return `<section class="screen">${sw2}${card(t)}
-  <div class="cg-card"><p class="traits">${esc(t.traits)}</p><p class="h-text">${esc(t.desc)}</p></div>
+  <div class="cg-card"><p class="traits">${esc(t.traits)}</p><details class="more"><summary>About your season</summary><p class="h-text">${esc(t.desc)}</p></details></div>
   <div class="cg-card"><p class="h-label">Best colors</p><div class="grid">${sw(t.best)}</div></div>
   <div class="cg-card"><p class="h-label">Clothing neutrals</p><div class="grid">${sw(t.neutrals)}</div></div>
   <div class="cg-card"><p class="h-label">Avoid near your face</p><div class="grid">${sw(t.worst, "sw x")}</div></div>
@@ -129,9 +129,9 @@ const makeupTab = () => {
     ${fin ? `<p class="h-text">${esc(finishTip(fin, t))}</p><ul class="cg-list">${finishSteps(fin, t).map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : `<p class="h-fine">Pick a finish to filter the product picks and tips.</p>`}</div>
   ${(FM = [{ base: PK.base[0]?.hex, blush: ord(M.blush)[0][1], contour: t.tone === "Warm" ? "#A8846A" : "#958389", lip: ord(M.lip)[0][1], eye: M.eyes[0][1] }, fin, t.tone === "Warm"], fmHTML())}
   <div class="cg-card">${order.map((k, i) => mkRow(secs[k][0], secs[k][1], i === 0 && P.look)).join("")}</div>
-  <div class="h-block"><p class="h-label">Product picks</p><p class="h-fine">Affordable K-beauty matched to ${t.season} ${t.sub}${fin ? `, ${fin} finish` : ""}. Shade colors are approximate. Prices are rough and can change.</p></div>
+  <div class="h-block"><h3 class="sec-h2 ic">Product picks</h3><p class="h-fine">Matched to ${t.season} ${t.sub}${fin ? `, ${fin}` : ""}. Shades and prices are approximate.</p></div>
   ${porder.map(k => `<div class="cg-card"><p class="h-label">${ptitle[k]}</p>${PK[k].length ? PK[k].map(p => prodCard(p, k)).join("") : `<p class="h-fine">No ${fin} picks here yet.</p>`}</div>`).join("")}
-  <div class="cg-card"><p class="h-label">Foundation undertone</p><p class="h-text">${esc(FOUNDATION[tone])}</p><p class="h-text">${esc(SHADE_TEST)}</p></div>
+  <div class="cg-card"><p class="h-label">Foundation undertone</p><p class="h-text">${esc(FOUNDATION[tone])}</p><details class="more"><summary>How to test a shade</summary><p class="h-text">${esc(SHADE_TEST)}</p></details></div>
   <div class="cg-card">${mkRow("Skip these", M.avoid)}</div></section>`; };
 const lockView = tab => { const P = store.PREMIUM, name = tab === "style" ? "Style" : "Makeup";
   const peek = tab === "style" ? `<div class="lock-peek">${bodySVG("hourglass")}${bodySVG("straight")}${bodySVG("inverted")}</div>` : `<div class="lock-peek mk-row">${["#C58A73", "#D9A68C", "#9C8572", "#6F5241"].map(h => `<div class="mk"><i style="--c:${h}"></i></div>`).join("")}</div>`;

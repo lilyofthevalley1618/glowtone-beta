@@ -265,3 +265,11 @@ details.more summary::after{content:" +";}details.more[open] summary::after{cont
 .sec-h{display:flex;align-items:center;gap:10px;font-size:1.4rem;font-weight:800;margin:0 -18px 6px;padding:14px 18px;border-bottom:1px solid #EFE7DD;color:var(--ink)}
 .sec-h.am{background:#FBF4E8}.sec-h.pm{background:#F3F0F6}.sec-ic{width:26px;height:26px;flex:none}
 .sec-h2{font-size:1.15rem;font-weight:800;margin:18px 0 2px;padding-bottom:8px;border-bottom:1px solid #EFE7DD;color:var(--ink)}
+/* ---- Oct 7b: hero + section headers on every tab ---- */
+.cg-card>.h-label:first-child,.card>.h-label:first-child,.card .rt-head .h-label,.mk-sec>.h-label,.h-block:not(:first-child)>.h-label:first-child,.sec-h2.ic{display:flex;align-items:center;gap:8px;font-size:1.2rem;font-weight:800;letter-spacing:0;text-transform:none;color:var(--ink);margin:0 0 6px;padding-bottom:10px;border-bottom:1px solid #EFE7DD}
+.cg-card>.h-label:first-child::before,.card>.h-label:first-child::before,.card .rt-head .h-label::before,.h-block:not(:first-child)>.h-label:first-child::before,.sec-h2.ic::before{content:"";width:20px;height:20px;flex:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='8' cy='9' r='4' fill='%23EBC9C0'/%3E%3Ccircle cx='15.5' cy='8' r='3.4' fill='%23E8D9B8'/%3E%3Ccircle cx='12' cy='15.5' r='4' fill='%23C9D6C4'/%3E%3C/svg%3E") center/contain no-repeat}
+.mk-sec>.h-label{font-size:1.05rem;border:0;padding:0}
+.screen>.h-block:first-child .h-name,.st-hero .h-name,.greet h1{font-size:1.9rem;font-weight:800;line-height:1.15}
+.screen>.h-block:first-child .h-label,.st-hero .h-label{font-size:.75rem}
+.screen .cg-card,.screen .card{margin-top:6px}.screen.home2,.screen{gap:22px}
+.h-block:not(:first-child){background:#fff;border-radius:22px;padding:18px}
