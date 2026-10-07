@@ -1,17 +1,16 @@
 // Home: routine checklist, glow streak and skin weather. All stored on the device; weather from Open-Meteo (free, no key).
-import * as store from "./storage.js?v=20261003c";
-import { skinResult, routine } from "./skin.js?v=20261003c";
+import * as store from "./storage.js?v=20261007a";
+import { skinResult, minimal } from "./skin.js?v=20261007a";
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const ymd = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; // local date
 const yesterday = () => { const d = new Date(); d.setDate(d.getDate() - 1); return ymd(d); };
-const SHORT = { "Oil cleanser": "Oil cleanse", "Water cleanser": "Cleanse", "Toner": "Toner", "Essence / serum": "Serum", "Moisturizer": "Moisturize", "Sunscreen": "SPF" };
 
 /* ---------- checklist + streak ---------- */
 export function steps() {
   const sk = store.load().skin;
   if (!sk) return { am: ["Cleanse", "Moisturize", "SPF"], pm: ["Cleanse", "Moisturize"], fromSkin: false };
-  const r = routine(skinResult(sk));
-  return { am: r.filter(s => s.when !== "PM").map(s => SHORT[s.n] || s.n), pm: r.filter(s => s.when !== "AM").map(s => SHORT[s.n] || s.n), fromSkin: true };
+  const m = minimal(skinResult(sk));
+  return { am: m.am.map(s => s.k), pm: m.pm.map(s => s.k), fromSkin: true };
 }
 const today = st => (st.check && st.check.date === ymd()) ? st.check : { date: ymd(), am: [], pm: [] }; // resets daily
 export function streakNow(st = store.load()) {

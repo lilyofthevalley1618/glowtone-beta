@@ -1,7 +1,8 @@
 // Skin quiz + K-beauty routine. On-device only. General guidance, not medical advice. See docs/skincare-research.md.
+import { picksFor, swatch } from "./skincare.js?v=20261007a";
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 export const SK_STEPS = [
-  { id: "tight", q: "About 30 minutes after washing, before any products, your skin feels…", opts: [["vtight", "Very tight, maybe itchy"], ["tight", "A little tight"], ["fine", "Comfortable"], ["shiny", "Already shiny"]] },
+  { id: "tight", q: "After washing your face, how does your skin feel?", hint: "About 30 minutes after washing, before any products.", opts: [["vtight", "Very tight, maybe itchy"], ["tight", "A little tight"], ["fine", "Comfortable"], ["shiny", "Already shiny"]] },
   { id: "flaky", q: "Do you get flaky or rough patches?", opts: [["often", "Often"], ["some", "Sometimes, e.g. in winter"], ["rare", "Rarely or never"]] },
   { id: "acne", q: "How often do you get breakouts?", opts: [["rare", "Rarely"], ["month", "A few around my period or stressful weeks"], ["often", "Most weeks"], ["always", "Almost always some"]] },
   { id: "where", q: "Where do breakouts usually show up?", hint: "Pick any that apply, or skip.", multi: 4, opts: [["forehead", "Forehead"], ["nose", "Nose"], ["cheeks", "Cheeks"], ["jaw", "Chin & jawline"], ["none", "Not really anywhere"]] },
@@ -79,16 +80,38 @@ const stepCard = (s, i) => `<div class="card sk-step"><div class="sk-head"><span
   <p class="h-text">${esc(s.why)}</p><p class="h-label">Product types</p>${list(s.types)}
   <div class="sk-ing"><div><p class="h-label">Look for</p><div class="st-tags">${s.look.map(x => `<span>${esc(x)}</span>`).join("")}</div></div>
   <div><p class="h-label">Be careful with</p><div class="st-tags warn">${s.careful.map(x => `<span>${esc(x)}</span>`).join("")}</div></div></div></div>`;
+// Minimal routine: 3-4 steps each, tailored by skin type. Labels double as the Home checklist.
+export function minimal(r) {
+  const { type, flags } = r, f = x => flags.includes(x), dry = type === "dry", oily = type === "oily" || type === "combination";
+  const pick = c => picksFor(r, c)[0];
+  const am = [
+    { k: "Cleanse", d: dry || f("sensitive") ? "Optional: a splash of water is enough" : "Gentle low-pH cleanser", p: dry || f("sensitive") ? null : picksFor(r, "cleanser").find(x => x.id !== "anuaOil") },
+    { k: "Serum", d: f("pigment") ? "Vitamin C for dark spots" : "Hydrating toner or serum", p: f("pigment") ? pick("serum") : pick("toner") || pick("serum") },
+    { k: "Moisturize", d: dry ? "Barrier cream" : oily ? "Light gel-cream" : "Light cream", p: pick("moisturizer") },
+    { k: "SPF", d: "SPF 50, two finger-lengths", p: pick("sunscreen") }];
+  const pm = [
+    { k: "Cleanse", d: "Oil or balm first if you wore SPF or makeup, then a gentle cleanser", p: pick("cleanser") },
+    { k: "Treat", d: f("acne") || oily ? "Soothing toner; pore pads 2–3 nights a week" : f("pigment") ? "Hydrating serum (vitamin C stays in the morning)" : "Hydrating serum", p: f("acne") || oily ? pick("toner") : picksFor(r, "serum").find(x => x.id !== "goodal") || pick("serum") },
+    { k: "Moisturize", d: dry ? "A richer layer of cream" : "Same moisturizer as the morning", p: pick("moisturizer") }];
+  return { am, pm };
+}
+const pickLine = p => p ? `<span class="rt-pick">${esc(p.brand)} ${esc(p.name)}${p.fav ? ' <em class="fav">Favorite</em>' : ""}</span>` : "";
+const stepsList = xs => `<ol class="rt-min">${xs.map(x => `<li><b>${esc(x.k)}</b><span>${esc(x.d)}</span>${pickLine(x.p)}</li>`).join("")}</ol>`;
+const pickCard = p => `<div class="pk-card">${swatch(p.cat)}<div><p class="pk-name">${esc(p.name)}${p.fav ? ' <em class="fav">Favorite</em>' : ""}</p><p class="pk-meta">${esc(p.brand)} · ${p.cat}${p.price ? ` · ~$${Math.round(p.price)}` : ""}${p.v ? "" : ' · <span class="unv">unverified</span>'}</p><p class="pk-why">${esc(p.why)}</p></div></div>`;
 export function skResultsView(r) {
-  const [tn, td] = TYPE_INFO[r.type], steps = routine(r), am = steps.filter(s => s.when !== "PM"), pm = steps.filter(s => s.when !== "AM");
-  return `<section class="screen home st sk">
-  <div class="h-block"><p class="h-label">Your skin</p><p class="h-name">${tn} skin</p><p class="h-text">${esc(td)}</p>
-  ${r.flags.length ? `<div class="sk-flags">${r.flags.map(f => `<div class="sk-flag"><b>${FLAG_INFO[f][0]}</b><span>${esc(FLAG_INFO[f][1])}</span></div>`).join("")}</div>` : ""}</div>
-  <div class="sk-safe">${esc(SAFE)}</div>
-  <div class="h-block"><p class="h-label">Morning</p><p class="h-text">${am.map(s => s.n).join(" → ")}</p></div>
-  <div class="h-block"><p class="h-label">Night</p><p class="h-text">${pm.map(s => s.n).join(" → ")}</p></div>
-  <div class="h-block"><p class="h-label">Step by step</p>${steps.map(stepCard).join("")}</div>
-  <div class="card"><p class="h-label">Patch-test first</p>${list(PATCH)}</div>
-  <div class="h-block h-soon"><p class="h-label">Product picks</p><p class="h-fine">Coming soon</p></div>
+  const [tn, td] = TYPE_INFO[r.type], m = minimal(r), all = picksFor(r), top = all.slice(0, 4), more = all.slice(4);
+  return `<section class="screen home st sk sk2">
+  <div class="sec"><p class="h-label">Your skin type</p><p class="h-name">${tn} skin</p><p class="h-text">${esc(td.split(". ")[0])}.</p>
+  ${r.flags.length ? `<div class="st-tags">${r.flags.map(f => `<span>${FLAG_INFO[f][0]}</span>`).join("")}</div>` : ""}</div>
+  <div class="card sec"><p class="h-label">Morning</p>${stepsList(m.am)}</div>
+  <div class="card sec"><p class="h-label">Night</p>${stepsList(m.pm)}</div>
+  <p class="h-fine less">Fewer products is better. Add one new thing at a time.</p>
+  <div class="sec"><p class="h-label">Picks for you</p>${top.map(pickCard).join("")}
+  ${more.length ? `<details class="more"><summary>More picks (${more.length})</summary>${more.map(pickCard).join("")}</details>` : ""}</div>
+  <div class="sec"><p class="h-label">Tips</p>
+  ${r.flags.map(f => `<p class="h-text"><b>${FLAG_INFO[f][0]}.</b> ${esc(FLAG_INFO[f][1])}</p>`).join("")}
+  <details class="more"><summary>Step-by-step details</summary>${routine(r).map(stepCard).join("")}</details>
+  <details class="more"><summary>Patch-test first</summary>${list(PATCH)}</details>
+  <p class="h-fine">${esc(SAFE)}</p></div>
   <button class="link h-start" data-act="skRetake">Retake skin quiz</button></section>`;
 }

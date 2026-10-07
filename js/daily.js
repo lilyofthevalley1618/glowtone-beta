@@ -1,5 +1,5 @@
 // Home tab daily content. Rotates by local date, works offline, no tracking.
-import { TYPES } from "./palettes.js?v=20261003c";
+import { TYPES } from "./palettes.js?v=20261007a";
 export const dayIndex = (d = new Date()) => Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())) / 864e5);
 const WEAR = [
   n => `Wear it close to your face (a top, scarf or knit) and keep the rest of the outfit in your ${n}.`,

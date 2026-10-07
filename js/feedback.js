@@ -1,5 +1,5 @@
 // Feedback pop-up: 5 stars + comment, posted in the background (no-cors) to a Google Form. No redirect, no form UI.
-import * as store from "./storage.js?v=20261003c";
+import * as store from "./storage.js?v=20261007a";
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 export function openFeedback(season) {
   if (document.getElementById("fbModal")) return;
