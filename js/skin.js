@@ -101,14 +101,14 @@ const pickCard = p => `<div class="pk-card">${swatch(p.cat)}<div><p class="pk-na
 export function skResultsView(r) {
   const [tn, td] = TYPE_INFO[r.type], m = minimal(r), all = picksFor(r), top = all.slice(0, 4), more = all.slice(4);
   return `<section class="screen home st sk sk2">
-  <div class="sec"><p class="h-label">Your skin type</p><p class="h-name">${tn} skin</p><p class="h-text">${esc(td.split(". ")[0])}.</p>
+  <div class="sec sk-hero"><p class="h-label">Your skin type</p><p class="sk-type">${tn} skin</p><p class="h-text">${esc(td.split(". ")[0])}.</p>
   ${r.flags.length ? `<div class="st-tags">${r.flags.map(f => `<span>${FLAG_INFO[f][0]}</span>`).join("")}</div>` : ""}</div>
-  <div class="card sec"><p class="h-label">Morning</p>${stepsList(m.am)}</div>
-  <div class="card sec"><p class="h-label">Night</p>${stepsList(m.pm)}</div>
+  <div class="card sec rt-sec"><h2 class="sec-h am"><svg class="sec-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="#F3D9A8"/><g stroke="#D9B27A" stroke-width="1.6" stroke-linecap="round"><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M5.3 5.3l1.7 1.7M17 17l1.7 1.7M5.3 18.7 7 17M17 7l1.7-1.7"/></g></svg>Morning</h2>${stepsList(m.am)}</div>
+  <div class="card sec rt-sec"><h2 class="sec-h pm"><svg class="sec-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 15.5A7.5 7.5 0 0 1 8.5 5a7.5 7.5 0 1 0 10.5 10.5z" fill="#C9C2D6" stroke="#A89BB8" stroke-width="1.2" stroke-linejoin="round"/></svg>Night</h2>${stepsList(m.pm)}</div>
   <p class="h-fine less">Fewer products is better. Add one new thing at a time.</p>
-  <div class="sec"><p class="h-label">Picks for you</p>${top.map(pickCard).join("")}
+  <div class="sec"><h3 class="sec-h2">Picks for you</h3>${top.map(pickCard).join("")}
   ${more.length ? `<details class="more"><summary>More picks (${more.length})</summary>${more.map(pickCard).join("")}</details>` : ""}</div>
-  <div class="sec"><p class="h-label">Tips</p>
+  <div class="sec"><h3 class="sec-h2">Tips</h3>
   ${r.flags.map(f => `<p class="h-text"><b>${FLAG_INFO[f][0]}.</b> ${esc(FLAG_INFO[f][1])}</p>`).join("")}
   <details class="more"><summary>Step-by-step details</summary>${routine(r).map(stepCard).join("")}</details>
   <details class="more"><summary>Patch-test first</summary>${list(PATCH)}</details>
