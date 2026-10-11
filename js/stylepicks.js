@@ -8,7 +8,14 @@ export const SHOPS = {
   shein: ["Shein", "https://us.shein.com/pdsearch/", "low"], uo: ["Urban Outfitters", "https://www.urbanoutfitters.com/search?q=", "mid"],
   garage: ["Garage", "https://www.garageclothing.com/us/search?q=", "low"], lulu: ["Lululemon", "https://shop.lululemon.com/search?Ntt=", "high"],
   af: ["Abercrombie", "https://www.abercrombie.com/shop/us/search?searchTerm=", "mid"], musinsa: ["Musinsa / Korean brands", "https://global.musinsa.com/us/search?keyword=", "mid"],
-  thrift: ["Thrift / Depop", "https://www.depop.com/search/?q=", "thrift"], other: ["Any shop you like", "", "mid"] };
+  thrift: ["Thrift / Depop", "https://www.depop.com/search/?q=", "thrift"],
+  alo: ["Alo Yoga", "https://www.aloyoga.com/search?q=", "high"], fp: ["Free People", "https://www.freepeople.com/search/?q=", "high"],
+  edikted: ["Edikted", "https://edikted.com/search?q=", "mid"], cider: ["Cider", "https://www.shopcider.com/search?keyword=", "low"],
+  hollister: ["Hollister", "https://www.hollisterco.com/shop/us/search?searchTerm=", "mid"], pacsun: ["PacSun", "https://www.pacsun.com/search?q=", "mid"],
+  skims: ["Skims", "https://skims.com/search?q=", "mid"], gymshark: ["Gymshark", "https://www.gymshark.com/search?q=", "mid"], aerie: ["Aerie", "https://www.ae.com/us/en/search/", "mid"],
+  other: ["Any shop you like", "", "mid"] };
+// shops that only make sense for some items (activewear / basics)
+const ONLY = { lulu: it => it[4].includes("gym"), alo: it => it[4].includes("gym"), gymshark: it => it[4].includes("gym"), skims: it => it[2] === "basics" && it[1] !== "outer", aerie: it => it[2] === "basics" || it[4].includes("gym") };
 const PRICE = { low: ["$12–30", "$20–45"], mid: ["$30–60", "$50–110"], high: ["$60–110", "$90–200"], thrift: ["$5–20", "$10–35"] };
 // [item, kind(top|bottom|outer|dress|acc), wear tag, vibes, occasions, trend 0 comfy..2 trendy, fits, big-ticket]
 const ITEMS = [
@@ -42,14 +49,14 @@ export function stylePicks(ans, type) {
   const shops = (ans.brands || []).filter(b => SHOPS[b]); if (!shops.length) shops.push(ans.budget === "low" ? "hm" : ans.budget === "high" ? "aritzia" : "uniqlo");
   const vibe = ans.vibe || "minimal", fit = ans.fit || "mix", occ = ans.occasion || [], wear = ans.wear || [], fav = ans.favs || [], trend = { comfy: 0, balance: 1, trendy: 2 }[ans.trend] ?? 1;
   const sc = it => (it[3].includes(vibe) ? 4 : 0) + (it[6].includes(fit) ? 2 : 0) + it[4].filter(o => occ.includes(o)).length * 2 + (wear.includes(it[2]) ? 2 : 0)
-    + (fav.includes(it[1]) || fav.includes(it[2]) ? 3 : 0) - Math.abs(it[5] - trend) * 1.5 + (shops.includes("lulu") && it[4].includes("gym") ? 3 : 0);
-  const ranked = ITEMS.map(it => [it, sc(it)]).sort((a, b) => b[1] - a[1]), out = [], kinds = {};
+    + (fav.includes(it[1]) || fav.includes(it[2]) ? 3 : 0) - Math.abs(it[5] - trend) * 1.5 + (shops.some(x => ONLY[x]?.(it)) ? 3 : 0);
+  const pool = ITEMS.filter(it => it[3].includes(vibe) || it[1] === "acc"), ranked = (pool.length >= 6 ? pool : ITEMS).map(it => [it, sc(it)]).sort((a, b) => b[1] - a[1]), out = [], kinds = {};
   for (const [it] of ranked) { if ((kinds[it[1]] || 0) >= (it[1] === "top" ? 2 : 1) || out.length >= 6) continue; kinds[it[1]] = (kinds[it[1]] || 0) + 1; out.push(it); }
-  const love = ans.colors || [], pat = (ans.patterns || []).find(p => PATTERN[p]), best = type.best, neu = type.neutrals;
+  const love = ans.colors || [], chroma = h => { const n = parseInt(h.slice(1), 16), r = n >> 16, g = n >> 8 & 255, b = n & 255; return Math.max(r, g, b) - Math.min(r, g, b); }, pat = (ans.patterns || []).find(p => PATTERN[p]), best = love.includes("brights") ? [...type.best].sort((a, b) => chroma(b[1]) - chroma(a[1])) : type.best, neu = type.neutrals; // brights = accents only
   const metal = { gold: "gold", silver: "silver", rose: "rose-gold", mix: (type.metals?.[0] || "gold").toLowerCase() }[ans.metal] || (type.metals?.[0] || "gold").toLowerCase();
   const picks = out.map((it, i) => {
-    const nearFace = it[1] === "top" || it[1] === "dress", col = nearFace || love.includes("brights") ? best[i % best.length] : neu[i % neu.length];
-    const fitShops = shops.filter(x => x !== "lulu" || it[4].includes("gym")), shop = (fitShops.length ? fitShops : ["other"])[i % (fitShops.length || 1)], [sn, url, tier] = SHOPS[shop], name = `${col[0].toLowerCase()} ${i === 1 && pat && !it[0].includes(PATTERN[pat]) && it[1] !== "acc" ? PATTERN[pat] + " " : ""}${it[0]}`;
+    const nearFace = it[1] === "top" || it[1] === "dress", col = nearFace || it[1] === "acc" ? best[i % best.length] : neu[i % neu.length]; // bottoms + outerwear stay neutral
+    const fitShops = shops.filter(x => !ONLY[x] || ONLY[x](it)), shop = (fitShops.length ? fitShops : ["other"])[i % (fitShops.length || 1)], [sn, url, tier] = SHOPS[shop], name = `${col[0].toLowerCase()} ${i === 1 && pat && !it[0].includes(PATTERN[pat]) && it[1] !== "acc" ? PATTERN[pat] + " " : ""}${it[0]}`;
     const why = [nearFace ? `${col[0]} is one of your best ${type.season} colors near the face` : `${col[0]} is an easy ${type.season} neutral`, it[3].includes(vibe) ? `fits your ${vibe} vibe` : "", it[6].includes(fit) ? `${fit} fit` : ""].filter(Boolean).join(", ") + ".";
     return { name, hex: col[1], shop: sn, price: PRICE[tier][it[7] ? 1 : 0], why, url: url ? url + encodeURIComponent(`${col[0]} ${it[0]}`) : "" };
   });

@@ -1,5 +1,5 @@
 // Style quiz + results. Body-positive and gender-neutral: every tip is about what's "flattering", never "fixing".
-import { stylePicks, picksHTML } from "./stylepicks.js?v=20261011a";
+import { stylePicks, picksHTML } from "./stylepicks.js?v=20261011b";
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 // Simple outline silhouettes (half-widths at shoulder / waist / hip).
 const SHAPES = { straight: [20, 18, 20], triangle: [16, 15, 25], inverted: [26, 17, 17], hourglass: [23, 13, 23], oval: [20, 25, 21] };
@@ -27,7 +27,7 @@ export const STEPS = [
   { id: "budget", q: "Usual budget per piece?", opts: [["low", "Under $30"], ["mid", "$30–80"], ["high", "$80+"]] },
   { id: "favs", q: "Favorite pieces?", hint: "Pick up to 3.", multi: 3, opts: [["top", "Tops"], ["bottom", "Pants & skirts"], ["dress", "Dresses"], ["outer", "Jackets & coats"], ["knit", "Sweaters"], ["acc", "Bags & accessories"]] },
   { id: "metal", q: "Jewelry metal you reach for?", opts: [["gold", "Gold"], ["silver", "Silver"], ["rose", "Rose gold"], ["mix", "Mix / not sure"]] },
-  { id: "brands", q: "Shops and brands you like?", hint: "Pick any. We'll match picks to them.", multi: 14, chips: true, opts: [["zara", "Zara"], ["hm", "H&M"], ["uniqlo", "Uniqlo"], ["aritzia", "Aritzia"], ["brandy", "Brandy Melville"], ["polly", "Princess Polly"], ["shein", "Shein"], ["uo", "Urban Outfitters"], ["garage", "Garage"], ["lulu", "Lululemon"], ["af", "Abercrombie"], ["musinsa", "Musinsa / Korean brands"], ["thrift", "Thrift"], ["other", "Other"]] },
+  { id: "brands", q: "Shops and brands you like?", hint: "Pick any. We'll match picks to them.", multi: 23, chips: true, opts: [["zara", "Zara"], ["hm", "H&M"], ["uniqlo", "Uniqlo"], ["aritzia", "Aritzia"], ["brandy", "Brandy Melville"], ["polly", "Princess Polly"], ["shein", "Shein"], ["uo", "Urban Outfitters"], ["garage", "Garage"], ["lulu", "Lululemon"], ["af", "Abercrombie"], ["musinsa", "Musinsa / Korean brands"], ["alo", "Alo Yoga"], ["fp", "Free People"], ["edikted", "Edikted"], ["cider", "Cider"], ["hollister", "Hollister"], ["pacsun", "PacSun"], ["skims", "Skims"], ["gymshark", "Gymshark"], ["aerie", "Aerie"], ["thrift", "Thrift"], ["other", "Other"]] },
 ];
 // [text, tags]: tags limit an item to the clothing types the user picked (untagged = always shown).
 const BODY = {
