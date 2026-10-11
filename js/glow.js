@@ -1,6 +1,6 @@
 // Home: routine checklist, glow streak and skin weather. All stored on the device; weather from Open-Meteo (free, no key).
-import * as store from "./storage.js?v=20261007b";
-import { skinResult, minimal } from "./skin.js?v=20261007b";
+import * as store from "./storage.js?v=20261011a";
+import { skinResult, minimal } from "./skin.js?v=20261011a";
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const ymd = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; // local date
 const yesterday = () => { const d = new Date(); d.setDate(d.getDate() - 1); return ymd(d); };
@@ -8,9 +8,9 @@ const yesterday = () => { const d = new Date(); d.setDate(d.getDate() - 1); retu
 /* ---------- checklist + streak ---------- */
 export function steps() {
   const sk = store.load().skin;
-  if (!sk) return { am: ["Cleanse", "Moisturize", "SPF"], pm: ["Cleanse", "Moisturize"], fromSkin: false };
-  const m = minimal(skinResult(sk));
-  return { am: m.am.map(s => s.k), pm: m.pm.map(s => s.k), fromSkin: true };
+  if (!sk) return { am: ["Cleanse", "Moisturize", "SPF"], pm: ["Cleanse", "Moisturize"], fromSkin: false, sub: { am: [], pm: [] } };
+  const m = minimal(skinResult(sk)), nm = x => x.p ? `${x.p.brand} ${x.p.name}` : x.d;
+  return { am: m.am.map(s => s.k), pm: m.pm.map(s => s.k), sub: { am: m.am.map(nm), pm: m.pm.map(nm) }, fromSkin: true };
 }
 const today = st => (st.check && st.check.date === ymd()) ? st.check : { date: ymd(), am: [], pm: [] }; // resets daily
 export function streakNow(st = store.load()) {
@@ -19,8 +19,12 @@ export function streakNow(st = store.load()) {
   return { cur: alive ? s.cur : 0, best: s.best || 0, doneToday: s.last === ymd() };
 }
 export function toggle(part, step) {
-  const st = store.load(), c = today(st), list = c[part].includes(step) ? c[part].filter(x => x !== step) : [...c[part], step];
-  c[part] = list; const S = steps(), full = S.am.every(x => c.am.includes(x)) && S.pm.every(x => c.pm.includes(x));
+  const st = store.load(), c = today(st), S = steps(), order = S[part], i = order.indexOf(step);
+  if (i < 0) return;
+  if (c[part].includes(step)) c[part] = order.slice(0, i).filter(x => c[part].includes(x)); // uncheck this + everything after
+  else if (i === 0 || c[part].includes(order[i - 1])) c[part] = [...order.slice(0, i), step].filter(x => x === step || c[part].includes(x));
+  else return; // locked: previous step not done yet
+  const full = S.am.every(x => c.am.includes(x)) && S.pm.every(x => c.pm.includes(x));
   let s = st.streak || { cur: 0, best: 0, last: null };
   if (full && s.last !== ymd()) { const cur = s.last === yesterday() ? s.cur + 1 : 1; s = { cur, best: Math.max(s.best || 0, cur), last: ymd(), prev: s }; }
   else if (!full && s.last === ymd() && s.prev) s = s.prev; // unchecked again today: undo today's count
@@ -29,12 +33,17 @@ export function toggle(part, step) {
 export function routineCard() {
   if (!store.load().skin) return `<button class="card rt-cta" data-act="rtStart"><p class="h-label">Your routine</p><p class="rt-cta-t">Take the Skin quiz to get your routine →</p><p class="h-text">12 quick questions. Then you'll get a daily morning and night checklist and a glow streak.</p></button>`;
   const S = steps(), c = today(store.load()), k = streakNow();
-  const row = (part, label) => `<div class="rt-part"><p class="rt-when">${label}</p><div class="rt-steps">${S[part].map(x => { const on = c[part].includes(x);
-    return `<button class="rt-step${on ? " on" : ""}" data-act="rtTog" data-p="${part}" data-s="${esc(x)}" aria-pressed="${on}"><span class="rt-box">${on ? "✓" : ""}</span>${esc(x)}</button>`; }).join("")}</div></div>`;
-  const msg = k.doneToday ? "All done today. Nice and gentle." : k.cur ? "Finish today's steps to keep it going." : "Check off today's steps to start a streak.";
-  return `<div class="card rt"><div class="rt-head"><p class="h-label">Today's routine</p></div>
-  ${row("am", "Morning")}${row("pm", "Night")}
-  <div class="streak"><div><b>${k.cur}</b><span>day glow streak</span></div><div><b>${k.best}</b><span>best</span></div></div><p class="h-fine">${msg}</p></div>`;
+  const LOCK = '<svg class="rt-lock" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="7" rx="2" fill="#D8CABB"/><path d="M5.5 7V5.2a2.5 2.5 0 0 1 5 0V7" fill="none" stroke="#C2B2A2" stroke-width="1.4"/></svg>';
+  const ICON = { am: '<svg class="sec-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="#F3D9A8"/><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M5.3 5.3l1.7 1.7M17 17l1.7 1.7M5.3 18.7 7 17M17 7l1.7-1.7" stroke="#D9B27A" stroke-width="1.6" stroke-linecap="round"/></svg>',
+    pm: '<svg class="sec-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 15.5A7.5 7.5 0 0 1 8.5 5a7.5 7.5 0 1 0 10.5 10.5z" fill="#C9C2D6" stroke="#A89BB8" stroke-width="1.2"/></svg>' };
+  const part = (p, label) => { const L = S[p], n = L.filter(x => c[p].includes(x)).length;
+    return `<div class="card rt-sec rt2"><h2 class="sec-h ${p}">${ICON[p]}${label}<span class="rt-prog">${n} of ${L.length}</span></h2><ol class="rt-list">${L.map((x, i) => { const on = c[p].includes(x), locked = !on && i > 0 && !c[p].includes(L[i - 1]);
+      return `<li><button class="rt-item${on ? " on" : ""}${locked ? " locked" : ""}" data-act="rtTog" data-p="${p}" data-s="${esc(x)}" aria-pressed="${on}"${locked ? ' aria-disabled="true" disabled' : ""} aria-label="Step ${i + 1}: ${esc(x)}${locked ? " (finish the step before first)" : ""}">
+      <span class="rt-num">${on ? "✓" : i + 1}</span><span class="rt-txt"><b>${esc(x)}</b>${S.sub?.[p]?.[i] ? `<small>${esc(S.sub[p][i])}</small>` : ""}</span>${locked ? LOCK : ""}</button></li>`; }).join("")}</ol></div>`; };
+  const msg = k.doneToday ? "All done today. Your skin thanks you." : k.cur ? "Finish both routines today to keep your streak." : "Finish morning and night to start a streak.";
+  return `<div class="rt-wrap"><p class="rt-why">Tired of breakouts and dull skin? It starts here. Do this routine every day, morning and night, and watch your skin change. No one can do it for you, and your results come from your consistency. You've got this.</p>
+  ${part("am", "Morning")}${part("pm", "Night")}
+  <div class="card streak-card"><div class="streak"><div><b>${k.cur}</b><span>day glow streak</span></div><div><b>${k.best}</b><span>best</span></div></div><p class="h-fine">${msg} Only fully finished days count.</p></div></div>`;
 }
 
 /* ---------- skin weather ---------- */

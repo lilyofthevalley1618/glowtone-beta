@@ -1,19 +1,19 @@
-import { QUESTIONS, scoreQuiz } from "./quiz.js?v=20261007b";
-import { analyze } from "./color.js?v=20261007b";
-import { combine } from "./classify.js?v=20261007b";
-import { TYPES, byId, nameOf, LEGACY } from "./palettes.js?v=20261007b";
-import { expertScan } from "./expert.js?v=20261007b";
-import { colorOfDay, tipOfDay, dayIndex } from "./daily.js?v=20261007b";
-import { chatView, mountChat } from "./chat.js?v=20261007b";
-import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip, finishSteps } from "./makeup.js?v=20261007b";
-import { picksFor, CHECKED } from "./products.js?v=20261007b";
-import { STEPS as ST_STEPS, quizView, resultsView, styleResult, bodySVG } from "./style.js?v=20261007b";
-import { findFace } from "./face.js?v=20261007b";
-import * as store from "./storage.js?v=20261007b";
-import { openFeedback } from "./feedback.js?v=20261007b";
-import * as glow from "./glow.js?v=20261007b";
-import { faceMap } from "./facemap.js?v=20261007b";
-import { SK_STEPS, skQuizView, skResultsView, skinResult } from "./skin.js?v=20261007b";
+import { QUESTIONS, scoreQuiz } from "./quiz.js?v=20261011a";
+import { analyze } from "./color.js?v=20261011a";
+import { combine } from "./classify.js?v=20261011a";
+import { TYPES, byId, nameOf, LEGACY } from "./palettes.js?v=20261011a";
+import { expertScan } from "./expert.js?v=20261011a";
+import { colorOfDay, tipOfDay, dayIndex } from "./daily.js?v=20261011a";
+import { chatView, mountChat } from "./chat.js?v=20261011a";
+import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip, finishSteps } from "./makeup.js?v=20261011a";
+import { picksFor, CHECKED } from "./products.js?v=20261011a";
+import { STEPS as ST_STEPS, quizView, resultsView, styleResult, bodySVG } from "./style.js?v=20261011a";
+import { findFace } from "./face.js?v=20261011a";
+import * as store from "./storage.js?v=20261011a";
+import { openFeedback } from "./feedback.js?v=20261011a";
+import * as glow from "./glow.js?v=20261011a";
+import { faceMap } from "./facemap.js?v=20261011a";
+import { SK_STEPS, skQuizView, skResultsView, skinResult } from "./skin.js?v=20261011a";
 
 const $app = document.getElementById("app"), $tabs = document.getElementById("tabs");
 const saved = store.load();
@@ -144,7 +144,7 @@ const styleTab = () => {
   const st = S.style || (S.style = { i: 0, ans: {}, quiz: false });
   if (!S.result) return `<section class="screen home"><div class="h-block"><p class="h-label">Style</p><p class="h-text">Find your personal color first, then we'll show flattering shapes and cuts in your palette.</p></div><button class="link h-start" data-act="start">Take the analysis →</button></section>`;
   const saved = store.load().style, t = byId[(S.view === "scan" && S.expert ? S.expert : S.result).type];
-  if (st.quiz || !saved) { if (!st.quiz && !saved) return `<section class="screen home"><div class="h-block"><p class="h-label">Style</p><p class="h-name">Find your flattering shapes</p><p class="h-text">8 quick questions about your shape, fit and vibe. Optional ones can be skipped, and everything stays on your phone.</p></div><button class="btn" data-act="stStart" style="align-self:flex-start">Start style quiz</button></section>`;
+  if (st.quiz || !saved) { if (!st.quiz && !saved) return `<section class="screen home"><div class="h-block"><p class="h-label">Style</p><p class="h-name">Find your flattering shapes</p><p class="h-text">16 quick taps about your shape, vibe and favorite shops. Optional ones can be skipped, and everything stays on your phone.</p></div><button class="btn" data-act="stStart" style="align-self:flex-start">Start style quiz</button></section>`;
     return quizView(st); }
   return resultsView(styleResult(saved, t), t, saved, viewSwitch());
 };

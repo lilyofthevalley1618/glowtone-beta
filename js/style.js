@@ -1,4 +1,5 @@
 // Style quiz + results. Body-positive and gender-neutral: every tip is about what's "flattering", never "fixing".
+import { stylePicks, picksHTML } from "./stylepicks.js?v=20261011a";
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 // Simple outline silhouettes (half-widths at shoulder / waist / hip).
 const SHAPES = { straight: [20, 18, 20], triangle: [16, 15, 25], inverted: [26, 17, 17], hourglass: [23, 13, 23], oval: [20, 25, 21] };
@@ -19,6 +20,14 @@ export const STEPS = [
   { id: "vibe", q: "Your style vibe?", opts: [["minimal", "Minimal & clean"], ["soft", "Soft & cozy"], ["street", "Street & sporty"], ["classic", "Classic & preppy"], ["bold", "Edgy & bold"]] },
   { id: "highlight", q: "Anything you love to show off?", hint: "Pick up to 2, or none.", multi: 2, opts: [["shoulders", "Shoulders"], ["waist", "Waist"], ["legs", "Legs"], ["arms", "Arms"], ["neck", "Neck & collarbones"], ["none", "Nothing in particular"]] },
   { id: "wear", q: "What do you like to wear?", hint: "Pick any.", multi: 6, opts: [["pants", "Pants & jeans"], ["skirts", "Skirts & dresses"], ["shorts", "Shorts"], ["tailoring", "Blazers & tailoring"], ["knit", "Knitwear"], ["basics", "Tees & hoodies"]] },
+  { id: "colors", q: "Colors you love to wear?", hint: "Pick any.", multi: 5, opts: [["neutrals", "Neutrals"], ["pastels", "Pastels"], ["brights", "Brights"], ["darks", "Darks"], ["earth", "Earth tones"]] },
+  { id: "patterns", q: "Patterns you like?", hint: "Pick any.", multi: 6, opts: [["solids", "Solids only"], ["stripes", "Stripes"], ["florals", "Florals"], ["plaid", "Plaid"], ["graphic", "Graphics"], ["animal", "Animal print"]] },
+  { id: "occasion", q: "What do you dress for most?", hint: "Pick up to 3.", multi: 3, opts: [["school", "School"], ["work", "Work"], ["casual", "Everyday casual"], ["out", "Going out"], ["gym", "Gym & active"], ["events", "Events"]] },
+  { id: "trend", q: "Comfort or trendy?", opts: [["comfy", "Comfort first"], ["balance", "A bit of both"], ["trendy", "Trendy all the way"]] },
+  { id: "budget", q: "Usual budget per piece?", opts: [["low", "Under $30"], ["mid", "$30–80"], ["high", "$80+"]] },
+  { id: "favs", q: "Favorite pieces?", hint: "Pick up to 3.", multi: 3, opts: [["top", "Tops"], ["bottom", "Pants & skirts"], ["dress", "Dresses"], ["outer", "Jackets & coats"], ["knit", "Sweaters"], ["acc", "Bags & accessories"]] },
+  { id: "metal", q: "Jewelry metal you reach for?", opts: [["gold", "Gold"], ["silver", "Silver"], ["rose", "Rose gold"], ["mix", "Mix / not sure"]] },
+  { id: "brands", q: "Shops and brands you like?", hint: "Pick any. We'll match picks to them.", multi: 14, chips: true, opts: [["zara", "Zara"], ["hm", "H&M"], ["uniqlo", "Uniqlo"], ["aritzia", "Aritzia"], ["brandy", "Brandy Melville"], ["polly", "Princess Polly"], ["shein", "Shein"], ["uo", "Urban Outfitters"], ["garage", "Garage"], ["lulu", "Lululemon"], ["af", "Abercrombie"], ["musinsa", "Musinsa / Korean brands"], ["thrift", "Thrift"], ["other", "Other"]] },
 ];
 // [text, tags]: tags limit an item to the clothing types the user picked (untagged = always shown).
 const BODY = {
@@ -59,7 +68,7 @@ export function quizView(st) {
   const sel = v => s.multi ? (a || []).includes(v) : a === v;
   const opts = s.body
     ? `<div class="bodygrid">${s.opts.map(([v, n, d]) => `<button class="bodyopt${sel(v) ? " on" : ""}" data-act="stAns" data-v="${v}">${bodySVG(v)}<b>${n}</b><span>${d}</span></button>`).join("")}</div>`
-    : `<div class="st-opts">${s.opts.map(([v, n]) => `<button class="st-opt${sel(v) ? " on" : ""}" data-act="stAns" data-v="${v}">${esc(n)}</button>`).join("")}</div>`;
+    : `<div class="st-opts${s.chips ? " chips" : ""}">${s.opts.map(([v, n]) => `<button class="st-opt${sel(v) ? " on" : ""}" data-act="stAns" data-v="${v}">${esc(n)}</button>`).join("")}</div>`;
   return `<section class="screen home st">
   <div class="h-block"><p class="h-label">Style quiz · ${st.i + 1} of ${STEPS.length}</p><p class="h-name">${esc(s.q)}</p>${s.hint ? `<p class="h-text">${esc(s.hint)}</p>` : ""}</div>
   ${s.input ? `<div class="st-input"><input id="stW" inputmode="numeric" placeholder="e.g. 55 kg or 120 lb" value="${esc(typeof a === "string" && a !== "skip" ? a : "")}"><button class="btn sm" data-act="stWeight">Next</button></div>` : ""}
@@ -76,6 +85,6 @@ export function resultsView(r, type, ans, sw) {
   <div class="h-block"><p class="h-label">Outfit idea in your palette</p><div class="st-outfit">${r.outfit.map(([n, h]) => `<i style="--c:${h}" title="${esc(n)}"></i>`).join("")}</div><p class="h-text">${esc(r.outfitText)}: ${r.outfit.map(o => o[0].toLowerCase()).join(" + ")}.</p></div>
   <div class="h-block"><p class="h-label">Tops near your face</p>${chips(r.tops)}</div>
   <div class="h-block"><p class="h-label">Bottoms & basics</p>${chips(r.bottoms)}</div>
-  <div class="h-block h-soon"><p class="h-label">Product picks</p><p class="h-fine">Coming soon</p></div>
+  <div class="h-block"><p class="h-label">Picks for you</p><p class="h-fine">Item ideas in your colors from shops you like. Links open a search.</p>${picksHTML(stylePicks(ans, type))}</div>
   <button class="link h-start" data-act="stRetake">Retake style quiz</button></section>`;
 }
