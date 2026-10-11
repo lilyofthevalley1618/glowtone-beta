@@ -1,10 +1,34 @@
 // Home: routine checklist, glow streak and skin weather. All stored on the device; weather from Open-Meteo (free, no key).
-import * as store from "./storage.js?v=20261011b";
-import { skinResult, minimal } from "./skin.js?v=20261011b";
+import * as store from "./storage.js?v=20261011c";
+import { skinResult, minimal } from "./skin.js?v=20261011c";
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const ymd = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; // local date
-const yesterday = () => { const d = new Date(); d.setDate(d.getDate() - 1); return ymd(d); };
-
+// Routine day: the user's time zone + daily reset hour (default midnight). Checks and streak both use this key.
+export const tzNow = () => store.load().tz || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+const ymd = (t = Date.now()) => { const st = store.load(), h = +st.resetH || 0;
+  try { return new Intl.DateTimeFormat("en-CA", { timeZone: tzNow(), year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(t - h * 36e5)); }
+  catch { const d = new Date(t - h * 36e5); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; } };
+export const dayKey = () => ymd();
+const yesterday = () => ymd(Date.now() - 864e5);
+/* ---------- first-open setup: city, time zone, reset time ---------- */
+const ZONES = ["America/Los_Angeles", "America/Denver", "America/Chicago", "America/New_York", "America/Toronto", "America/Vancouver", "America/Sao_Paulo", "Europe/London", "Europe/Paris", "Asia/Seoul", "Asia/Tokyo", "Asia/Shanghai", "Asia/Singapore", "Asia/Kolkata", "Australia/Sydney", "Pacific/Auckland", "UTC"];
+let setupTz = false;
+export const setupTzEdit = () => { setupTz = true; };
+export const needsSetup = () => { const st = store.load(); return !st.setup; };
+export function setupCard() {
+  const st = store.load(), tz = tzNow(), zs = ZONES.includes(tz) ? ZONES : [tz, ...ZONES], rh = +st.resetH || 0;
+  return `<div class="card setup"><p class="h-label">Location & time</p><p class="h-text">So your weather and daily routine match your day.</p>
+  <label class="su-l" for="suCity">City</label><input id="suCity" placeholder="e.g. Vancouver" autocomplete="address-level2" value="${esc(st.wloc?.name && st.wloc.name !== "Your location" ? st.wloc.name : "")}">
+  <p class="su-l">Your time zone: <b>${esc(tz)}</b> ${setupTz ? "" : `<button class="link sm" data-act="suTz">Edit</button>`}</p>
+  ${setupTz ? `<select id="suTzSel" aria-label="Time zone">${zs.map(z => `<option${z === tz ? " selected" : ""}>${z}</option>`).join("")}</select>` : ""}
+  <label class="su-l" for="suReset">New day starts at</label><select id="suReset">${[[0, "Midnight"], [4, "4 AM"], [5, "5 AM"], [6, "6 AM"]].map(([v, n]) => `<option value="${v}"${v === rh ? " selected" : ""}>${n}</option>`).join("")}</select>
+  <div class="row-l su-btns"><button class="btn sm" data-act="suSave">Save</button><button class="link" data-act="suSkip">${st.setup ? "Cancel" : "Skip for now"}</button></div></div>`;
+}
+export function saveSetup(rerender) {
+  const city = document.getElementById("suCity")?.value, tz = document.getElementById("suTzSel")?.value || tzNow(), resetH = +(document.getElementById("suReset")?.value || 0);
+  store.save({ ...store.load(), tz, resetH, setup: true }); setupTz = false;
+  if (city && city.trim() && city.trim() !== store.load().wloc?.name) setCity(city, rerender); else rerender();
+}
+export const skipSetup = () => { store.save({ ...store.load(), setup: true }); setupTz = false; };
 /* ---------- checklist + streak ---------- */
 export function steps() {
   const sk = store.load().skin;

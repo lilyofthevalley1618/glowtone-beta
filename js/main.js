@@ -1,19 +1,19 @@
-import { QUESTIONS, scoreQuiz } from "./quiz.js?v=20261011b";
-import { analyze } from "./color.js?v=20261011b";
-import { combine } from "./classify.js?v=20261011b";
-import { TYPES, byId, nameOf, LEGACY } from "./palettes.js?v=20261011b";
-import { expertScan } from "./expert.js?v=20261011b";
-import { colorOfDay, tipOfDay, dayIndex } from "./daily.js?v=20261011b";
-import { chatView, mountChat } from "./chat.js?v=20261011b";
-import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip, finishSteps } from "./makeup.js?v=20261011b";
-import { picksFor, CHECKED } from "./products.js?v=20261011b";
-import { STEPS as ST_STEPS, quizView, resultsView, styleResult, bodySVG } from "./style.js?v=20261011b";
-import { findFace } from "./face.js?v=20261011b";
-import * as store from "./storage.js?v=20261011b";
-import { openFeedback } from "./feedback.js?v=20261011b";
-import * as glow from "./glow.js?v=20261011b";
-import { faceMap } from "./facemap.js?v=20261011b";
-import { SK_STEPS, skQuizView, skResultsView, skinResult } from "./skin.js?v=20261011b";
+import { QUESTIONS, scoreQuiz } from "./quiz.js?v=20261011c";
+import { analyze } from "./color.js?v=20261011c";
+import { combine } from "./classify.js?v=20261011c";
+import { TYPES, byId, nameOf, LEGACY } from "./palettes.js?v=20261011c";
+import { expertScan } from "./expert.js?v=20261011c";
+import { colorOfDay, tipOfDay, dayIndex } from "./daily.js?v=20261011c";
+import { chatView, mountChat } from "./chat.js?v=20261011c";
+import { MAKEUP, FOUNDATION, SHADE_TEST, finishTip, finishSteps } from "./makeup.js?v=20261011c";
+import { picksFor, CHECKED } from "./products.js?v=20261011c";
+import { STEPS as ST_STEPS, quizView, resultsView, styleResult, bodySVG } from "./style.js?v=20261011c";
+import { findFace } from "./face.js?v=20261011c";
+import * as store from "./storage.js?v=20261011c";
+import { openFeedback } from "./feedback.js?v=20261011c";
+import * as glow from "./glow.js?v=20261011c";
+import { faceMap } from "./facemap.js?v=20261011c";
+import { SK_STEPS, skQuizView, skResultsView, skinResult } from "./skin.js?v=20261011c";
 
 const $app = document.getElementById("app"), $tabs = document.getElementById("tabs");
 const saved = store.load();
@@ -93,6 +93,7 @@ home: () => {
   <div class="cg-card"><p class="h-label">Avoid near your face</p><div class="grid">${sw(t.worst, "sw x")}</div></div>
   <div class="cg-card"><p class="h-label">Hair colors</p><div class="grid">${sw(t.hair)}</div><p class="h-label">Jewelry metals</p><p class="metals">${t.metals.map(x => `<span>${esc(x)}</span>`).join("")}</p></div>
   <button class="link h-start" data-tab="makeup">See your makeup shades →</button>
+  <button class="link" data-act="suOpen">Location & time</button>
   <div class="tipbox">${esc(t.tip)}</div>
   ${(() => { const src = S.view === "scan" && S.expert ? S.expert : S.result; return `<p class="tiny">${src === S.expert ? "Expert scan" : "Your picks"} · ${new Date(S.result.date).toLocaleDateString()} · ${src.label} confidence (${src.conf}%)</p>`; })()}
   <div class="row"><button class="btn ghost" data-act="retake">Retake analysis</button></div></section>`; },
@@ -170,10 +171,11 @@ const homeTab = () => { const st = store.load(), t = S.result && byId[(S.view ==
   return `<section class="screen home2">
   <div class="greet"><p class="h-date">${esc(new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }))}</p>
     <h1>${greet}</h1>
-    ${editing ? `<div class="namebox"><label for="nameIn">What should we call you? <span class="fine">(optional, saved on this phone)</span></label><div class="row-l"><input id="nameIn" maxlength="24" value="${esc(name)}" placeholder="Your name" autocomplete="given-name"><button class="btn sm" data-act="nameSave">Save</button>${name || !st.nameAsked ? `<button class="link" data-act="nameSkip">${name ? "Cancel" : "Skip"}</button>` : ""}</div></div>` : `<button class="link edit" data-act="nameEdit">${name ? "Edit name" : "Add your name"}</button>`}
+    ${editing ? `<div class="namebox"><label for="nameIn">What should we call you? <span class="fine">(optional, saved on this phone)</span></label><div class="row-l"><input id="nameIn" maxlength="24" value="${esc(name)}" placeholder="Your name" autocomplete="given-name"><button class="btn sm" data-act="nameSave">Save</button>${name || !st.nameAsked ? `<button class="link" data-act="nameSkip">${name ? "Cancel" : "Skip"}</button>` : ""}</div></div>` : `<button class="link edit" data-act="nameEdit">${name ? "Edit name" : "Add your name"}</button>`} <button class="link edit" data-act="suOpen">Location & time</button>
     ${t ? `<p class="h-text">You're <b>${t.season} ${t.tone} ${t.sub}</b> <span lang="ko">${t.ko}</span></p>` : `<button class="link h-start" data-act="start">Start your color analysis →</button>`}</div>
   <div class="card cod"><p class="h-label">Color of the day</p><div class="h-color"><i style="--c:${c.hex}"></i><div><p class="h-name">${esc(c.name)}</p><p class="h-text">${esc(c.tip)}</p></div></div></div>
   <div class="card"><p class="h-label">K-beauty tip</p><p class="h-body">${esc(tipOfDay())}</p><p class="h-fine">General tips, not medical advice.</p></div>
+  ${S.setupOpen || glow.needsSetup() ? glow.setupCard() : ""}
   ${glow.routineCard()}
   ${glow.weatherCard()}
   ${idea ? `<div class="card"><p class="h-label">Style idea of the day</p><div class="st-outfit">${idea.colors.map(([n, h]) => `<i style="--c:${h}" title="${esc(n)}"></i>`).join("")}</div><p class="h-body">${esc(idea.text)}</p>${idea.nudge ? `<button class="link h-start" data-tab="style">Take the Style quiz for ideas that fit your shape →</button>` : ""}</div>` : `<div class="card"><p class="h-label">Style idea of the day</p><p class="h-body">Find your season and you'll get a fresh outfit idea in your colors every day.</p><button class="link h-start" data-act="start">Start your color analysis →</button></div>`}
@@ -251,6 +253,10 @@ document.addEventListener("click", e => {
     wxCity: () => glow.setCity(document.getElementById("wxCity")?.value, render),
     wxUnit: () => { const st = store.load(); store.save({ ...st, wunit: (st.wunit || "F") === "F" ? "C" : "F" }); render(); },
     wxEdit: () => { glow.wxEdit(); render(); },
+    suTz: () => { glow.setupTzEdit(); render(); },
+    suSave: () => { S.setupOpen = false; glow.saveSetup(render); },
+    suSkip: () => { S.setupOpen = false; glow.skipSetup(); render(); },
+    suOpen: () => { S.setupOpen = true; S.tab = "home"; go("home"); window.scrollTo(0, 0); },
     fbOpen: () => openFeedback(S.result?.type),
     nameEdit: () => { S.nameEdit = true; render(); setTimeout(() => document.getElementById("nameIn")?.focus(), 30); },
     nameSave: () => { const v = (document.getElementById("nameIn").value || "").trim().slice(0, 24); store.save({ ...store.load(), name: v, nameAsked: true }); S.nameEdit = false; render(); },
@@ -386,3 +392,7 @@ function finish() {
 }
 window.__glowtone = { S, analyze, combine, scoreQuiz, expertScan }; // debug/test hook
 render();
+// New routine day (user's time zone + reset hour): clear checks on screen even while the app stays open.
+let lastDay = glow.dayKey();
+const dayCheck = () => { const k = glow.dayKey(); if (k !== lastDay) { lastDay = k; if (S.screen === "home" && S.tab === "home") render(); } };
+document.addEventListener("visibilitychange", () => { if (!document.hidden) dayCheck(); }); window.addEventListener("focus", dayCheck); setInterval(dayCheck, 60000);

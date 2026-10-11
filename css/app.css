@@ -282,3 +282,4 @@ details.more summary::after{content:" +";}details.more[open] summary::after{cont
 .rt-num{width:26px;height:26px;flex:none;border-radius:50%;display:grid;place-items:center;background:#EFE7DD;color:#8A7466;font-weight:700;font-size:.8rem}.rt-item.on .rt-num{background:#A89584;color:#fff}
 .rt-txt{display:flex;flex-direction:column;gap:2px;flex:1}.rt-txt small{font-size:.78rem;color:var(--muted)}.rt-lock{width:16px;height:16px;flex:none}
 .st .st-opts.chips{display:flex!important;flex-direction:row;flex-wrap:wrap;gap:8px}.st .st-opts.chips .st-opt{width:auto!important;flex:0 0 auto}
+.setup{display:flex;flex-direction:column;gap:8px}.su-l{font-size:.85rem;color:var(--muted);margin:4px 0 0}.setup input,.setup select{font:inherit;font-size:16px;padding:10px 12px;border:1px solid #E5DACE;border-radius:14px;background:#fff;color:var(--ink)}.su-btns{gap:12px;margin-top:6px}

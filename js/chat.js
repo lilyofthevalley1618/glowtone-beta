@@ -4,14 +4,14 @@
    Mode 2: optional bring-your-own-key, OpenAI-compatible /chat/completions
    The key lives ONLY in this browser's localStorage under 'glowtone.ai'. No Glowtone server.
    ========================================================= */
-import { TYPES, byId, nameOf } from "./palettes.js?v=20261011b";
-import { rgbToLab } from "./color.js?v=20261011b";
-import { KBEAUTY_TIPS, tipOfDay, colorOfDay } from "./daily.js?v=20261011b";
-import { MAKEUP, FOUNDATION, SHADE_TEST } from "./makeup.js?v=20261011b";
-import { styleResult } from "./style.js?v=20261011b";
-import { load } from "./storage.js?v=20261011b";
-import { picksFor } from "./products.js?v=20261011b";
-import { skinResult, routine, TYPE_INFO, FLAG_INFO, SAFE, PATCH } from "./skin.js?v=20261011b";
+import { TYPES, byId, nameOf } from "./palettes.js?v=20261011c";
+import { rgbToLab } from "./color.js?v=20261011c";
+import { KBEAUTY_TIPS, tipOfDay, colorOfDay } from "./daily.js?v=20261011c";
+import { MAKEUP, FOUNDATION, SHADE_TEST } from "./makeup.js?v=20261011c";
+import { styleResult } from "./style.js?v=20261011c";
+import { load } from "./storage.js?v=20261011c";
+import { picksFor } from "./products.js?v=20261011c";
+import { skinResult, routine, TYPE_INFO, FLAG_INFO, SAFE, PATCH } from "./skin.js?v=20261011c";
 
 const AIKEY = "glowtone.ai";
 export const AI_PRESETS = {

@@ -1,5 +1,5 @@
 // Style quiz + results. Body-positive and gender-neutral: every tip is about what's "flattering", never "fixing".
-import { stylePicks, picksHTML } from "./stylepicks.js?v=20261011b";
+import { stylePicks, picksHTML } from "./stylepicks.js?v=20261011c";
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 // Simple outline silhouettes (half-widths at shoulder / waist / hip).
 const SHAPES = { straight: [20, 18, 20], triangle: [16, 15, 25], inverted: [26, 17, 17], hourglass: [23, 13, 23], oval: [20, 25, 21] };
